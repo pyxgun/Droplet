@@ -40,8 +40,13 @@ type ResourceObject struct {
 	Cpu    CpuObject    `json:"cpu"`
 }
 
+type NamespaceObject struct {
+	Type string `json:"type"`
+}
+
 type LinuxSpecObject struct {
-	Resources ResourceObject `json:"resources"`
+	Resources  ResourceObject    `json:"resources"`
+	Namespaces []NamespaceObject `json:"namespaces"`
 }
 
 type AnnotationObject struct {

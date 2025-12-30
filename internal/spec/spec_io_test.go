@@ -236,6 +236,26 @@ func TestBuildLinuxSpec_1(t *testing.T) {
 				Quota:  80000,
 			},
 		},
+		Namespaces: []NamespaceObject{
+			{
+				Type: "mount",
+			},
+			{
+				Type: "network",
+			},
+			{
+				Type: "uts",
+			},
+			{
+				Type: "pid",
+			},
+			{
+				Type: "ipc",
+			},
+			{
+				Type: "cgroup",
+			},
+		},
 	}
 
 	assert.Equal(t, expect, result)
@@ -550,6 +570,26 @@ func TestBuildSpec_1(t *testing.T) {
 					Quota:  80000,
 				},
 			},
+			Namespaces: []NamespaceObject{
+				{
+					Type: "mount",
+				},
+				{
+					Type: "network",
+				},
+				{
+					Type: "uts",
+				},
+				{
+					Type: "pid",
+				},
+				{
+					Type: "ipc",
+				},
+				{
+					Type: "cgroup",
+				},
+			},
 		},
 		Annotations: AnnotationObject{
 			Version: "0.1.0",
@@ -784,7 +824,27 @@ func TestLoadConfigFile_1(t *testing.T) {
 								"period": 100000,
 								"quota": 80000
 							}
-						}
+						},
+						"namespaces": [
+							{
+								"type": "mount"
+							},
+							{
+								"type": "network"
+							},
+							{
+								"type": "uts"
+							},
+							{
+								"type": "pid"
+							},
+							{
+								"type": "ipc"
+							},
+							{
+								"type": "cgroup"
+							}
+						]
 					},
 					"annotations": {
 						"io.raind.runtime.annotation.version": "0.1.0",
@@ -972,6 +1032,26 @@ func TestLoadConfigFile_1(t *testing.T) {
 				Cpu: CpuObject{
 					Period: 100000,
 					Quota:  80000,
+				},
+			},
+			Namespaces: []NamespaceObject{
+				{
+					Type: "mount",
+				},
+				{
+					Type: "network",
+				},
+				{
+					Type: "uts",
+				},
+				{
+					Type: "pid",
+				},
+				{
+					Type: "ipc",
+				},
+				{
+					Type: "cgroup",
 				},
 			},
 		},

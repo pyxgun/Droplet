@@ -178,6 +178,26 @@ func buildLinuxSpec() LinuxSpecObject {
 				Quota:  80000,
 			},
 		},
+		Namespaces: []NamespaceObject{
+			{
+				Type: "mount",
+			},
+			{
+				Type: "network",
+			},
+			{
+				Type: "uts",
+			},
+			{
+				Type: "pid",
+			},
+			{
+				Type: "ipc",
+			},
+			{
+				Type: "cgroup",
+			},
+		},
 	}
 }
 
