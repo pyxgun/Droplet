@@ -20,7 +20,8 @@ func runStart(ctx *cli.Context) error {
 	containerId := ctx.Args().Get(0)
 
 	// start container
-	err := container.StartContainer(container.StartOption{
+	containerStart := container.NewContainerStart()
+	err := containerStart.Execute(container.StartOption{
 		ContainerId: containerId,
 	})
 	if err != nil {

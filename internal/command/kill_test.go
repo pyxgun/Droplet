@@ -3,6 +3,8 @@ package command
 import (
 	"testing"
 
+	"droplet/internal/testutils"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,7 +18,7 @@ func TestCommandKill_1(t *testing.T) {
 	}
 
 	// execute command
-	result := readStdout(t, func() {
+	result := testutils.CaptureStdout(t, func() {
 		if err := app.Run([]string{"droplet", "kill", "test-container"}); err != nil {
 			t.Errorf("error")
 		}
@@ -39,7 +41,7 @@ func TestCommandKill_2(t *testing.T) {
 	}
 
 	// execute command
-	result := readStdout(t, func() {
+	result := testutils.CaptureStdout(t, func() {
 		if err := app.Run([]string{"droplet", "kill", "test-container", "SIGKILL"}); err != nil {
 			t.Errorf("error")
 		}

@@ -1,4 +1,4 @@
-package command
+package testutils
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func readStdout(t *testing.T, fnc func()) string {
+func CaptureStdout(t *testing.T, fnc func()) string {
 	t.Helper()
 
 	// store original stdout

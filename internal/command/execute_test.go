@@ -3,6 +3,8 @@ package command
 import (
 	"testing"
 
+	"droplet/internal/testutils"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,7 +18,7 @@ func TestCommandExec_1(t *testing.T) {
 	}
 
 	// execute command
-	result := readStdout(t, func() {
+	result := testutils.CaptureStdout(t, func() {
 		if err := app.Run([]string{"droplet", "exec", "test-container", "/bin/bash"}); err != nil {
 			t.Errorf("error")
 		}

@@ -3,6 +3,8 @@ package command
 import (
 	"testing"
 
+	"droplet/internal/testutils"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,7 +18,7 @@ func TestCommandDelete_1(t *testing.T) {
 	}
 
 	// execute command
-	result := readStdout(t, func() {
+	result := testutils.CaptureStdout(t, func() {
 		if err := app.Run([]string{"droplet", "delete", "test-container"}); err != nil {
 			t.Errorf("error")
 		}

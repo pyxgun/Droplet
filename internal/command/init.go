@@ -22,7 +22,8 @@ func runInit(ctx *cli.Context) error {
 	args := ctx.Args().Slice()
 	entrypoint := args[1:]
 
-	err := container.InitContainer(container.InitOption{
+	containerInit := container.NewContainerInit()
+	err := containerInit.Execute(container.InitOption{
 		Fifo:       fifo,
 		Entrypoint: entrypoint,
 	})

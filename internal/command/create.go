@@ -19,7 +19,12 @@ func runCreate(ctx *cli.Context) error {
 	// retrieve container ID
 	containerId := ctx.Args().Get(0)
 
-	err := container.CreateContainer(container.CreateOption{ContainerId: containerId})
+	containerCreator := container.NewContainerCreator()
+	err := containerCreator.Create(
+		container.CreateOption{
+			ContainerId: containerId,
+		},
+	)
 
 	if err != nil {
 		return err

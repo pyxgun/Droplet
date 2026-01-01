@@ -3,7 +3,8 @@
 CID=123456
 ROOTFS=/
 CWD=/
-CMD='/usr/bin/python3 -m http.server 8777'
+#CMD='/usr/bin/python3 -m http.server 8777'
+CMD='/bin/sh -c "echo hello world!; sleep 10"'
 HOSTNAME=mycontainer
 
 IF_NAME=eth0
