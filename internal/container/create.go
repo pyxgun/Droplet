@@ -95,6 +95,7 @@ func (c *containerInitExecutor) executeInit(spec spec.Spec, fifo string) (int, e
 	// prepare init subcommand
 	initArgs := append([]string{"init", fifo}, entrypoint...)
 	cmd := c.commandFactory.Command(os.Args[0], initArgs...)
+	// TODO: set stdout/stderr to log files
 
 	// apply clone flags
 	nsConfig := buildNamespaceConfig(spec)

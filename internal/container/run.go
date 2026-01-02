@@ -67,9 +67,13 @@ func (c *ContainerRun) Run(opt RunOption) error {
 	initArgs := append([]string{"init", fifo}, entrypoint...)
 	cmd := c.commandFactory.Command(os.Args[0], initArgs...)
 	// set stdout/stderr/stdin
-	cmd.SetStdout(os.Stdout)
-	cmd.SetStderr(os.Stderr)
-	cmd.SetStdin(os.Stdin)
+	if opt.Interactive {
+		cmd.SetStdout(os.Stdout)
+		cmd.SetStderr(os.Stderr)
+		cmd.SetStdin(os.Stdin)
+	}
+	// TODO: non-interactive mode
+	// when started in non-interactive mode, set stdout/stderr to log files
 
 	// apply clone flags
 	nsConfig := buildNamespaceConfig(spec)
@@ -90,8 +94,10 @@ func (c *ContainerRun) Run(opt RunOption) error {
 	}
 
 	// 6. wait init process
-	if err := cmd.Wait(); err != nil {
-		return err
+	if opt.Interactive {
+		if err := cmd.Wait(); err != nil {
+			return err
+		}
 	}
 
 	return nil

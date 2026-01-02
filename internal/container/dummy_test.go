@@ -129,6 +129,16 @@ func dummySpec() spec.Spec {
 				"/bin/sh",
 			},
 		},
+		LinuxSpec: spec.LinuxSpecObject{
+			Namespaces: []spec.NamespaceObject{
+				{
+					Type: "mount",
+				},
+				{
+					Type: "uts",
+				},
+			},
+		},
 	}
 }
 

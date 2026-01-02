@@ -3,9 +3,9 @@
 CID=123456
 ROOTFS=/
 CWD=/
-CMD='/usr/bin/python3 -m http.server 8777'
+#CMD='/usr/bin/python3 -m http.server 8777'
 #CMD='/bin/sh -c "echo hello world!; sleep 10"'
-#CMD='/bin/sh'
+CMD='/bin/sh'
 HOSTNAME=mycontainer
 
 IF_NAME=eth0
@@ -24,6 +24,7 @@ OUTDIR=/etc/raind/container/$CID
   --rootfs "$ROOTFS" \
   --cwd "$CWD" \
   --command "$CMD" \
+  --ns "mount" --ns "network" --ns "uts" --ns "pid" --ns "ipc" --ns "user" --ns "cgroup" \
   --hostname "$HOSTNAME" \
   --if_name "$IF_NAME" \
   --if_addr "$IF_ADDR" \

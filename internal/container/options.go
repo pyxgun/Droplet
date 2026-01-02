@@ -19,4 +19,5 @@ type StartOption struct {
 // run options
 type RunOption struct {
 	ContainerId string
+	Interactive bool
 }
