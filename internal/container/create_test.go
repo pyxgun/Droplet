@@ -83,14 +83,14 @@ func TestExecuteInit_Success(t *testing.T) {
 		commandFactory: dummyCmdFactory,
 	}
 
-	pid, err := dummyInitExecutor.executeInit(spec, fifo)
+	pid, err := dummyInitExecutor.executeInit("123456", spec, fifo)
 	if err != nil {
 		t.Fatalf("executeInit returned error: %v", err)
 	}
 
 	// assert
-	// 1. the args is set to "init <fifo-path> <entrypoint>"
-	expectArgs := []string{"init", "/tmp/exec.fifo", "/bin/sh"}
+	// 1. the args is set to "init <container-id> <fifo-path> <entrypoint>"
+	expectArgs := []string{"init", "123456", "/tmp/exec.fifo", "/bin/sh"}
 	resultArgs := dummyCmdFactory.commandArgs
 	assert.Equal(t, expectArgs, resultArgs)
 
@@ -121,7 +121,7 @@ func TestExecuteInit_StartError(t *testing.T) {
 		commandFactory: dummyCmdFactory,
 	}
 
-	pid, err := dummyInitExecutor.executeInit(spec, fifo)
+	pid, err := dummyInitExecutor.executeInit("123456", spec, fifo)
 
 	// assert
 	// 1. pid is -1

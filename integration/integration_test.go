@@ -139,7 +139,7 @@ func TestIntegration_Run_Namespace(t *testing.T) {
 		"spec",
 		"--rootfs", "/",
 		"--cwd", "/",
-		"--command", `/bin/sh -c "echo Hello World from Container!"`,
+		"--command", `/bin/sh -c "hostname"`,
 		"--ns", "mount", "--ns", "network", "--ns", "uts", "--ns", "pid", "--ns", "ipc", "--ns", "user", "--ns", "cgroup",
 		"--hostname", containerId,
 		"--if_name", "eth0",

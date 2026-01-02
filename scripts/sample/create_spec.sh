@@ -20,6 +20,7 @@ MERGE_DIR=/merge/path
 
 OUTDIR=/etc/raind/container/$CID
 
+
 ./bin/droplet spec \
   --rootfs "$ROOTFS" \
   --cwd "$CWD" \

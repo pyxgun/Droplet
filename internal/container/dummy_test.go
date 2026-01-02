@@ -12,9 +12,12 @@ type dummyFileSpecLoader struct {
 	containerId string
 	spec        spec.Spec
 	err         error
+
+	callFlag bool
 }
 
 func (d *dummyFileSpecLoader) loadFile(containerId string) (spec.Spec, error) {
+	d.callFlag = true
 	d.containerId = containerId
 	return d.spec, d.err
 }
@@ -51,20 +54,6 @@ func (d *dummyFifoHandler) writeFifo(path string) error {
 	d.callFlag = true
 	d.path = path
 	return d.writeErr
-}
-
-// dummy container init executor
-type dummyContainerInitExecutor struct {
-	Spec spec.Spec
-	Fifo string
-	Pid  int
-	Err  error
-}
-
-func (d *dummyContainerInitExecutor) executeInit(spec spec.Spec, fifo string) (int, error) {
-	d.Spec = spec
-	d.Fifo = fifo
-	return d.Pid, d.Err
 }
 
 type dummyCmd struct {
@@ -135,7 +124,22 @@ func dummySpec() spec.Spec {
 					Type: "mount",
 				},
 				{
+					Type: "network",
+				},
+				{
 					Type: "uts",
+				},
+				{
+					Type: "pid",
+				},
+				{
+					Type: "ipc",
+				},
+				{
+					Type: "user",
+				},
+				{
+					Type: "cgroup",
 				},
 			},
 		},
@@ -143,18 +147,82 @@ func dummySpec() spec.Spec {
 }
 
 // dummy process replacer
-type dummySyscallProcessReplacer struct {
-	argv0    string
-	argv     []string
-	envv     []string
-	err      error
-	callFlag bool
+type dummySyscallHandler struct {
+	argv0 string
+	argv  []string
+	envv  []string
+
+	rgid int
+	egid int
+	sgid int
+
+	ruid int
+	euid int
+	suid int
+
+	p []byte
+
+	err error
+
+	execCallFlag        bool
+	setresgidCallFlag   bool
+	setresuidCallFlag   bool
+	sethostnameCallFlag bool
 }
 
-func (d *dummySyscallProcessReplacer) Exec(argv0 string, argv []string, envv []string) error {
-	d.callFlag = true
+func (d *dummySyscallHandler) Exec(argv0 string, argv []string, envv []string) error {
+	d.execCallFlag = true
 	d.argv0 = argv0
 	d.argv = argv
 	d.envv = envv
+	return d.err
+}
+
+func (d *dummySyscallHandler) Setresgid(rgid int, egid int, sgid int) error {
+	d.setresgidCallFlag = true
+	d.rgid = rgid
+	d.egid = egid
+	d.sgid = sgid
+	return d.err
+}
+
+func (d *dummySyscallHandler) Setresuid(ruid int, euid int, suid int) error {
+	d.setresuidCallFlag = true
+	d.ruid = ruid
+	d.euid = euid
+	d.suid = suid
+	return d.err
+}
+
+func (d *dummySyscallHandler) Sethostname(p []byte) error {
+	d.sethostnameCallFlag = true
+	d.p = p
+	return d.err
+}
+
+// dummy container init executor
+type dummyContainerInitExecutor struct {
+	Spec spec.Spec
+	Fifo string
+	Pid  int
+	Err  error
+}
+
+func (d *dummyContainerInitExecutor) executeInit(containerId string, spec spec.Spec, fifo string) (int, error) {
+	d.Spec = spec
+	d.Fifo = fifo
+	return d.Pid, d.Err
+}
+
+type dummyContainerRootEnvPreparer struct {
+	spec            spec.Spec
+	prepareCallFlag bool
+
+	err error
+}
+
+func (d *dummyContainerRootEnvPreparer) prepare(spec spec.Spec) error {
+	d.prepareCallFlag = true
+	d.spec = spec
 	return d.err
 }
