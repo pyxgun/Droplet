@@ -321,6 +321,7 @@ func TestDropletRun_Run(t *testing.T) {
 	// run command
 	cmdRun := exec.Command("sudo", "env", "RAIND_ROOT_DIR="+path,
 		binary, "run",
+		"-i",
 		"--print-pid",
 		containerId,
 	)
@@ -336,6 +337,8 @@ func TestDropletRun_Run(t *testing.T) {
 	defer cleanupInitProcess(t, pid)
 
 	// == assert ==
+	// execute entrypoint was successed
+	assert.Contains(t, string(runOut), "Hello World")
 	// fifo.exec not exists
 	assert.NoFileExists(t, filepath.Join(rootDir, "exec.fifo"))
 	// init process not exists
