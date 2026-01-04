@@ -344,12 +344,20 @@ func (p *rootContainerEnvPreparer) mountFilesystem(rootfs string, mountList []sp
 //   - /dev/random
 //   - /dev/urandom
 //   - /dev/null
+//   - /dev/full
 //   - /dev/zero
 //   - /dev/tty
 //
 // If the destination file does not exist under rootfs, it is created first.
 func (p *rootContainerEnvPreparer) mountStdDevice(rootfs string) error {
-	devices := []string{"random", "urandom", "null", "zero", "tty"}
+	devices := []string{
+		"random",
+		"urandom",
+		"null",
+		"zero",
+		"full",
+		"tty",
+	}
 	for _, device := range devices {
 		destination := filepath.Join(rootfs, "dev", device)
 		// check if the file exist
@@ -359,11 +367,22 @@ func (p *rootContainerEnvPreparer) mountStdDevice(rootfs string) error {
 				return err
 			}
 		}
+		// mount
 		if err := p.syscallHandler.Mount(
 			"/dev/"+device,
 			destination,
 			"",
 			syscall.MS_BIND,
+			"",
+		); err != nil {
+			return err
+		}
+		// remount for setting read-only flag
+		if err := p.syscallHandler.Mount(
+			"",
+			destination,
+			"",
+			syscall.MS_BIND|syscall.MS_REMOUNT|syscall.MS_RDONLY|syscall.MS_NOEXEC|syscall.MS_NOSUID,
 			"",
 		); err != nil {
 			return err
