@@ -8,6 +8,8 @@ import (
 // raind container root directory
 var rootDir = defaultRootDir()
 
+const cgroupRootDir = "/sys/fs/cgroup/raind"
+
 func defaultRootDir() string {
 	if v := os.Getenv("RAIND_ROOT_DIR"); v != "" {
 		return v
@@ -34,4 +36,9 @@ func configFilePath(containerId string) string {
 //	e.g. /etc/raind/container/<container-id>/exec.fifo
 func fifoPath(containerId string) string {
 	return filepath.Join(containerDir(containerId), "exec.fifo")
+}
+
+// cgroup path
+func cgroupPath(containerId string) string {
+	return filepath.Join(cgroupRootDir, containerId)
 }

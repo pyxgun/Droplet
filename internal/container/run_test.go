@@ -38,11 +38,13 @@ func TestContainerRun_Run_InteractiveSuccess(t *testing.T) {
 	mockContainerStart := &ContainerStart{
 		fifoHandler: mockCotainerFifoHandler,
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	containerRun := &ContainerRun{
-		specLoader:     mockFileSpecLoader,
-		fifoCreator:    mockCotainerFifoHandler,
-		commandFactory: mockExecCommandFactory,
-		containerStart: mockContainerStart,
+		specLoader:              mockFileSpecLoader,
+		fifoCreator:             mockCotainerFifoHandler,
+		commandFactory:          mockExecCommandFactory,
+		containerStart:          mockContainerStart,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -90,11 +92,13 @@ func TestContainerRun_Run_NonInteractiveSuccess(t *testing.T) {
 	mockContainerStart := &ContainerStart{
 		fifoHandler: mockCotainerFifoHandler,
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	containerRun := &ContainerRun{
-		specLoader:     mockFileSpecLoader,
-		fifoCreator:    mockCotainerFifoHandler,
-		commandFactory: mockExecCommandFactory,
-		containerStart: mockContainerStart,
+		specLoader:              mockFileSpecLoader,
+		fifoCreator:             mockCotainerFifoHandler,
+		commandFactory:          mockExecCommandFactory,
+		containerStart:          mockContainerStart,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -134,11 +138,13 @@ func TestContainerRun_Run_LoadFileError(t *testing.T) {
 	mockContainerStart := &ContainerStart{
 		fifoHandler: mockCotainerFifoHandler,
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	containerRun := &ContainerRun{
-		specLoader:     mockFileSpecLoader,
-		fifoCreator:    mockCotainerFifoHandler,
-		commandFactory: mockExecCommandFactory,
-		containerStart: mockContainerStart,
+		specLoader:              mockFileSpecLoader,
+		fifoCreator:             mockCotainerFifoHandler,
+		commandFactory:          mockExecCommandFactory,
+		containerStart:          mockContainerStart,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -168,11 +174,13 @@ func TestContainerRun_Run_CreateFifoError(t *testing.T) {
 	mockContainerStart := &ContainerStart{
 		fifoHandler: mockCotainerFifoHandler,
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	containerRun := &ContainerRun{
-		specLoader:     mockFileSpecLoader,
-		fifoCreator:    mockCotainerFifoHandler,
-		commandFactory: mockExecCommandFactory,
-		containerStart: mockContainerStart,
+		specLoader:              mockFileSpecLoader,
+		fifoCreator:             mockCotainerFifoHandler,
+		commandFactory:          mockExecCommandFactory,
+		containerStart:          mockContainerStart,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -202,11 +210,13 @@ func TestContainerRun_Run_StartError(t *testing.T) {
 	mockContainerStart := &ContainerStart{
 		fifoHandler: mockCotainerFifoHandler,
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	containerRun := &ContainerRun{
-		specLoader:     mockFileSpecLoader,
-		fifoCreator:    mockCotainerFifoHandler,
-		commandFactory: mockExecCommandFactory,
-		containerStart: mockContainerStart,
+		specLoader:              mockFileSpecLoader,
+		fifoCreator:             mockCotainerFifoHandler,
+		commandFactory:          mockExecCommandFactory,
+		containerStart:          mockContainerStart,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -236,11 +246,13 @@ func TestContainerRun_Run_WaitError(t *testing.T) {
 	mockContainerStart := &ContainerStart{
 		fifoHandler: mockCotainerFifoHandler,
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	containerRun := &ContainerRun{
-		specLoader:     mockFileSpecLoader,
-		fifoCreator:    mockCotainerFifoHandler,
-		commandFactory: mockExecCommandFactory,
-		containerStart: mockContainerStart,
+		specLoader:              mockFileSpecLoader,
+		fifoCreator:             mockCotainerFifoHandler,
+		commandFactory:          mockExecCommandFactory,
+		containerStart:          mockContainerStart,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==

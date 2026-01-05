@@ -45,10 +45,12 @@ func TestContainerCreator_Create_Success(t *testing.T) {
 	mockSpecLoader := &mockFileSpecLoader{}
 	mockFifoCreator := &mockCotainerFifoHandler{}
 	mockProcessExecutor := &mockContainerInitExecutor{}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	mockContainerCreator := ContainerCreator{
-		specLoader:      mockSpecLoader,
-		fifoCreator:     mockFifoCreator,
-		processExecutor: mockProcessExecutor,
+		specLoader:              mockSpecLoader,
+		fifoCreator:             mockFifoCreator,
+		processExecutor:         mockProcessExecutor,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -76,10 +78,12 @@ func TestContainerCreator_Create_LoadFileError(t *testing.T) {
 	}
 	mockFifoCreator := &mockCotainerFifoHandler{}
 	mockProcessExecutor := &mockContainerInitExecutor{}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	mockContainerCreator := ContainerCreator{
-		specLoader:      mockSpecLoader,
-		fifoCreator:     mockFifoCreator,
-		processExecutor: mockProcessExecutor,
+		specLoader:              mockSpecLoader,
+		fifoCreator:             mockFifoCreator,
+		processExecutor:         mockProcessExecutor,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -98,10 +102,12 @@ func TestContainerCreator_Create_CreateFifoError(t *testing.T) {
 		createFifoErr: errors.New("createFifo() failed"),
 	}
 	mockProcessExecutor := &mockContainerInitExecutor{}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	mockContainerCreator := ContainerCreator{
-		specLoader:      mockSpecLoader,
-		fifoCreator:     mockFifoCreator,
-		processExecutor: mockProcessExecutor,
+		specLoader:              mockSpecLoader,
+		fifoCreator:             mockFifoCreator,
+		processExecutor:         mockProcessExecutor,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
@@ -120,10 +126,12 @@ func TestContainerCreator_Create_ExecuteInitError(t *testing.T) {
 	mockProcessExecutor := &mockContainerInitExecutor{
 		executeInitErr: errors.New("executeInit() failed"),
 	}
+	mockeContainerCgroupController := &mockeContainerCgroupController{}
 	mockContainerCreator := ContainerCreator{
-		specLoader:      mockSpecLoader,
-		fifoCreator:     mockFifoCreator,
-		processExecutor: mockProcessExecutor,
+		specLoader:              mockSpecLoader,
+		fifoCreator:             mockFifoCreator,
+		processExecutor:         mockProcessExecutor,
+		containerCgroupPreparer: mockeContainerCgroupController,
 	}
 
 	// == act ==
