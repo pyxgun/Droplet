@@ -12,9 +12,10 @@ import (
 // This acts as the main entry point for the container creation workflow.
 func NewContainerCreator() *ContainerCreator {
 	return &ContainerCreator{
-		specLoader:      newFileSpecLoader(),
-		fifoCreator:     newContainerFifoHandler(),
-		processExecutor: newContainerInitExecutor(),
+		specLoader:              newFileSpecLoader(),
+		fifoCreator:             newContainerFifoHandler(),
+		processExecutor:         newContainerInitExecutor(),
+		containerCgroupPreparer: newContainerCgroupController(),
 	}
 }
 
@@ -36,9 +37,10 @@ func newContainerInitExecutor() *containerInitExecutor {
 //
 // Each step is delegated to an interface to allow testing and substitution.
 type ContainerCreator struct {
-	specLoader      specLoader
-	fifoCreator     fifoCreator
-	processExecutor processExecutor
+	specLoader              specLoader
+	fifoCreator             fifoCreator
+	processExecutor         processExecutor
+	containerCgroupPreparer containerCgroupPreparer
 }
 
 // Create executes the container creation pipeline for the given container ID.
@@ -69,6 +71,11 @@ func (c *ContainerCreator) Create(opt CreateOption) error {
 		fmt.Printf("create container success. pid: %d\n", initPid)
 	} else {
 		fmt.Printf("create container success. ID: %s\n", opt.ContainerId)
+	}
+
+	// cgroup setup
+	if err := c.containerCgroupPreparer.prepare(opt.ContainerId, spec, initPid); err != nil {
+		return err
 	}
 
 	return nil

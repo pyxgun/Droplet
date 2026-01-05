@@ -186,6 +186,13 @@ type mockKernelSyscall struct {
 	openFilePerm     os.FileMode
 	openFileFile     *os.File
 	openFileErr      error
+
+	// WriteFile()
+	writeFileCallFlag bool
+	writeFileName     string
+	writeFileData     []byte
+	writeFilePerm     os.FileMode
+	writeFileErr      error
 }
 
 func (m *mockKernelSyscall) Exec(argv0 string, argv []string, envv []string) error {
@@ -320,6 +327,14 @@ func (m *mockKernelSyscall) OpenFile(name string, flag int, perm os.FileMode) (*
 	m.openFileFlag = flag
 	m.openFilePerm = perm
 	return m.openFileFile, m.openFileErr
+}
+
+func (m *mockKernelSyscall) WriteFile(name string, data []byte, perm os.FileMode) error {
+	m.writeFileCallFlag = true
+	m.writeFileName = name
+	m.writeFileData = data
+	m.writeFilePerm = perm
+	return m.writeFileErr
 }
 
 type mockFileInfo struct {
