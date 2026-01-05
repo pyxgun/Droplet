@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CID=123456
-ROOTFS=/etc/raind/container/$CID/merge
+ROOTFS=/etc/raind/container/$CID/merged
 CWD=/
 #CMD='/usr/bin/python3 -m http.server 8777'
 #CMD='/bin/sh -c "echo hello world!; sleep 10"'

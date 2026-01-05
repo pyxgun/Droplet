@@ -1,0 +1,91 @@
+package container
+
+import (
+	"droplet/internal/spec"
+	"fmt"
+	"path/filepath"
+	"strconv"
+)
+
+func newContainerCgroupController() *containerCgroupController {
+	return &containerCgroupController{
+		syscallHandler: newSyscallHandler(),
+	}
+}
+
+type containerCgroupPreparer interface {
+	prepare(containerId string, spec spec.Spec, pid int) error
+}
+
+type containerCgroupController struct {
+	syscallHandler containerEnvPrepareSyscallHandler
+}
+
+func (c *containerCgroupController) prepare(containerId string, spec spec.Spec, pid int) error {
+	// 1. create cgroup directory
+	if err := c.createCgroupDirectory(containerId); err != nil {
+		return err
+	}
+
+	// 2. set memory limit
+	if err := c.setMemoryLimit(containerId, spec.LinuxSpec.Resources.Memory); err != nil {
+		return err
+	}
+
+	// 3. set cpu limit
+	if err := c.setCpuLimit(containerId, spec.LinuxSpec.Resources.Cpu); err != nil {
+		return err
+	}
+
+	// 4. set pid to cgroup.procs
+	if err := c.setProcessToCgroup(containerId, pid); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *containerCgroupController) createCgroupDirectory(containerId string) error {
+	cgroupPath := cgroupPath(containerId)
+
+	// create directory
+	if err := c.syscallHandler.MkdirAll(cgroupPath, 0755); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *containerCgroupController) setMemoryLimit(containerId string, memoryObject spec.MemoryObject) error {
+	cgroupPath := cgroupPath(containerId)
+	memoryPath := filepath.Join(cgroupPath, "memory.max")
+	memoryLimit := strconv.FormatInt(int64(memoryObject.Limit), 10)
+
+	if err := c.syscallHandler.WriteFile(memoryPath, []byte(memoryLimit+"\n"), 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *containerCgroupController) setCpuLimit(containerId string, cpuObject spec.CpuObject) error {
+	cgroupPath := cgroupPath(containerId)
+	cpuPath := filepath.Join(cgroupPath, "cpu.max")
+	cpuLimit := fmt.Sprintf("%d %d\n", cpuObject.Quota, cpuObject.Period)
+
+	if err := c.syscallHandler.WriteFile(cpuPath, []byte(cpuLimit), 0644); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *containerCgroupController) setProcessToCgroup(containerId string, pid int) error {
+	cgroupPath := cgroupPath(containerId)
+	cgroupProcs := filepath.Join(cgroupPath, "cgroup.procs")
+	data := strconv.Itoa(pid) + "\n"
+
+	if err := c.syscallHandler.WriteFile(cgroupProcs, []byte(data), 0644); err != nil {
+		return err
+	}
+
+	return nil
+}

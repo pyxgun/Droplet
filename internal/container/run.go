@@ -15,10 +15,11 @@ import (
 // process to exit.
 func NewContainerRun() *ContainerRun {
 	return &ContainerRun{
-		specLoader:     newFileSpecLoader(),
-		fifoCreator:    newContainerFifoHandler(),
-		commandFactory: newCommandFactory(),
-		containerStart: NewContainerStart(),
+		specLoader:              newFileSpecLoader(),
+		fifoCreator:             newContainerFifoHandler(),
+		commandFactory:          newCommandFactory(),
+		containerStart:          NewContainerStart(),
+		containerCgroupPreparer: newContainerCgroupController(),
 	}
 }
 
@@ -35,10 +36,11 @@ func NewContainerRun() *ContainerRun {
 // This differs from the `create` + `start` workflow in that the caller
 // remains attached to the container process and blocks until it terminates.
 type ContainerRun struct {
-	specLoader     specLoader
-	fifoCreator    fifoCreator
-	commandFactory commandFactory
-	containerStart *ContainerStart
+	specLoader              specLoader
+	fifoCreator             fifoCreator
+	commandFactory          commandFactory
+	containerStart          *ContainerStart
+	containerCgroupPreparer containerCgroupPreparer
 }
 
 // Run executes the container run pipeline for the provided container ID.
@@ -93,6 +95,11 @@ func (c *ContainerRun) Run(opt RunOption) error {
 		fmt.Printf("create container success. pid: %d\n", cmd.Pid())
 	} else {
 		fmt.Printf("create container success. ID: %s\n", opt.ContainerId)
+	}
+
+	// cgroup setup
+	if err := c.containerCgroupPreparer.prepare(opt.ContainerId, spec, cmd.Pid()); err != nil {
+		return err
 	}
 
 	// 5. start container

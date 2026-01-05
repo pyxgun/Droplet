@@ -128,6 +128,7 @@ type containerEnvPrepareSyscallHandler interface {
 	Symlink(oldname string, newname string) error
 	Lstat(name string) (os.FileInfo, error)
 	OpenFile(name string, flag int, perm os.FileMode) (*os.File, error)
+	WriteFile(name string, data []byte, perm os.FileMode) error
 }
 
 // newSyscallHandler returns a kernelSyscall that delegates to
@@ -284,4 +285,8 @@ func (k *kernelSyscall) Lstat(name string) (os.FileInfo, error) {
 // O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, and O_EXCL.
 func (k *kernelSyscall) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
 	return os.OpenFile(name, flag, perm)
+}
+
+func (k *kernelSyscall) WriteFile(name string, data []byte, perm os.FileMode) error {
+	return os.WriteFile(name, data, perm)
 }

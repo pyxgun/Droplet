@@ -115,13 +115,8 @@ type mockKernelSyscall struct {
 	sethostnameErr      error
 
 	// Mount()
-	mountCallFlag bool
-	mountSource   string
-	mountTarget   string
-	mountFstype   string
-	mountFlags    uintptr
-	mountData     string
-	mountErr      error
+	mountCalls []mountCallParameter
+	mountErr   error
 
 	// Unmount()
 	unmountCallFlag bool
@@ -175,10 +170,8 @@ type mockKernelSyscall struct {
 	isNotExistBool     bool
 
 	// Symlink()
-	symlinkCallFlag bool
-	symlinkOldname  string
-	symlinkNewname  string
-	symlinkErr      error
+	symlinkCalls []symlinkParameter
+	symlinkErr   error
 
 	// Lstat()
 	lstatCallFlag bool
@@ -193,6 +186,13 @@ type mockKernelSyscall struct {
 	openFilePerm     os.FileMode
 	openFileFile     *os.File
 	openFileErr      error
+
+	// WriteFile()
+	writeFileCallFlag bool
+	writeFileName     string
+	writeFileData     []byte
+	writeFilePerm     os.FileMode
+	writeFileErr      error
 }
 
 func (m *mockKernelSyscall) Exec(argv0 string, argv []string, envv []string) error {
@@ -225,13 +225,22 @@ func (m *mockKernelSyscall) Sethostname(p []byte) error {
 	return m.sethostnameErr
 }
 
+type mountCallParameter struct {
+	source string
+	target string
+	fstype string
+	flags  uintptr
+	data   string
+}
+
 func (m *mockKernelSyscall) Mount(source string, target string, fstype string, flags uintptr, data string) error {
-	m.mountCallFlag = true
-	m.mountSource = source
-	m.mountTarget = target
-	m.mountFstype = fstype
-	m.mountFlags = flags
-	m.mountData = data
+	m.mountCalls = append(m.mountCalls, mountCallParameter{
+		source: source,
+		target: target,
+		fstype: fstype,
+		flags:  flags,
+		data:   data,
+	})
 	return m.mountErr
 }
 
@@ -293,10 +302,16 @@ func (m *mockKernelSyscall) IsNotExist(err error) bool {
 	return m.isNotExistBool
 }
 
+type symlinkParameter struct {
+	oldname string
+	newname string
+}
+
 func (m *mockKernelSyscall) Symlink(oldname string, newname string) error {
-	m.symlinkCallFlag = true
-	m.symlinkOldname = oldname
-	m.symlinkNewname = newname
+	m.symlinkCalls = append(m.symlinkCalls, symlinkParameter{
+		oldname: oldname,
+		newname: newname,
+	})
 	return m.symlinkErr
 }
 
@@ -312,6 +327,14 @@ func (m *mockKernelSyscall) OpenFile(name string, flag int, perm os.FileMode) (*
 	m.openFileFlag = flag
 	m.openFilePerm = perm
 	return m.openFileFile, m.openFileErr
+}
+
+func (m *mockKernelSyscall) WriteFile(name string, data []byte, perm os.FileMode) error {
+	m.writeFileCallFlag = true
+	m.writeFileName = name
+	m.writeFileData = data
+	m.writeFilePerm = perm
+	return m.writeFileErr
 }
 
 type mockFileInfo struct {
