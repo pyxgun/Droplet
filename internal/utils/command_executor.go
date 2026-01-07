@@ -134,6 +134,7 @@ type KernelSyscallHandler interface {
 	Rmdir(path string) error
 	Stat(name string) (os.FileInfo, error)
 	Create(name string) (*os.File, error)
+	Remove(name string) error
 	IsNotExist(err error) bool
 	Symlink(oldname string, newname string) error
 	Lstat(name string) (os.FileInfo, error)
@@ -264,6 +265,10 @@ func (k *kernelSyscall) Stat(name string) (os.FileInfo, error) {
 // an open(2) call with O_CREAT|O_TRUNC.
 func (k *kernelSyscall) Create(name string) (*os.File, error) {
 	return os.Create(name)
+}
+
+func (k *kernelSyscall) Remove(name string) error {
+	return os.Remove(name)
 }
 
 // IsNotExist reports whether an error indicates that a file or directory

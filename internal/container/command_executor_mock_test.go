@@ -187,6 +187,11 @@ type mockKernelSyscall struct {
 	createFile     *os.File
 	createErr      error
 
+	// Remove()
+	removeCallFlag bool
+	removeName     string
+	removeErr      error
+
 	// IsNotExist()
 	isNotExistCallFlag bool
 	isNotExistErr      error
@@ -323,6 +328,12 @@ func (m *mockKernelSyscall) Create(name string) (*os.File, error) {
 	m.createCallFlag = true
 	m.createName = name
 	return m.createFile, m.createErr
+}
+
+func (m *mockKernelSyscall) Remove(name string) error {
+	m.removeCallFlag = true
+	m.removeName = name
+	return m.removeErr
 }
 
 func (m *mockKernelSyscall) IsNotExist(err error) bool {
