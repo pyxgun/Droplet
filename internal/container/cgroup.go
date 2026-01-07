@@ -2,6 +2,7 @@ package container
 
 import (
 	"droplet/internal/spec"
+	"droplet/internal/utils"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -46,7 +47,7 @@ func (c *containerCgroupController) prepare(containerId string, spec spec.Spec, 
 }
 
 func (c *containerCgroupController) createCgroupDirectory(containerId string) error {
-	cgroupPath := cgroupPath(containerId)
+	cgroupPath := utils.CgroupPath(containerId)
 
 	// create directory
 	if err := c.syscallHandler.MkdirAll(cgroupPath, 0755); err != nil {
@@ -56,7 +57,7 @@ func (c *containerCgroupController) createCgroupDirectory(containerId string) er
 }
 
 func (c *containerCgroupController) setMemoryLimit(containerId string, memoryObject spec.MemoryObject) error {
-	cgroupPath := cgroupPath(containerId)
+	cgroupPath := utils.CgroupPath(containerId)
 	memoryPath := filepath.Join(cgroupPath, "memory.max")
 	memoryLimit := strconv.FormatInt(int64(memoryObject.Limit), 10)
 
@@ -68,7 +69,7 @@ func (c *containerCgroupController) setMemoryLimit(containerId string, memoryObj
 }
 
 func (c *containerCgroupController) setCpuLimit(containerId string, cpuObject spec.CpuObject) error {
-	cgroupPath := cgroupPath(containerId)
+	cgroupPath := utils.CgroupPath(containerId)
 	cpuPath := filepath.Join(cgroupPath, "cpu.max")
 	cpuLimit := fmt.Sprintf("%d %d\n", cpuObject.Quota, cpuObject.Period)
 
@@ -79,7 +80,7 @@ func (c *containerCgroupController) setCpuLimit(containerId string, cpuObject sp
 }
 
 func (c *containerCgroupController) setProcessToCgroup(containerId string, pid int) error {
-	cgroupPath := cgroupPath(containerId)
+	cgroupPath := utils.CgroupPath(containerId)
 	cgroupProcs := filepath.Join(cgroupPath, "cgroup.procs")
 	data := strconv.Itoa(pid) + "\n"
 

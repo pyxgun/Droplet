@@ -337,7 +337,7 @@ func TestBuildSpec_Success(t *testing.T) {
 
 	// == assert ==
 	expect := Spec{
-		OciVersion: "1.2.0",
+		OciVersion: "1.3.0",
 		Root: RootObject{
 			Path: "rootfs",
 		},
@@ -572,7 +572,7 @@ func TestLoadConfigFile_Success(t *testing.T) {
 	assert.Nil(t, err)
 
 	expect := Spec{
-		OciVersion: "1.2.0",
+		OciVersion: "1.3.0",
 		Root: RootObject{
 			Path: "rootfs",
 		},

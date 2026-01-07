@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"droplet/internal/spec"
+	"droplet/internal/status"
+	"droplet/internal/utils"
 )
 
 // NewContainerCreator constructs a ContainerCreator with the default
@@ -17,6 +19,7 @@ func NewContainerCreator() *ContainerCreator {
 		processExecutor:          newContainerInitExecutor(),
 		containerNetworkPreparer: newContainerNetworkController(),
 		containerCgroupPreparer:  newContainerCgroupController(),
+		containerStatusManager:   status.NewStatusHandler(),
 	}
 }
 
@@ -43,6 +46,7 @@ type ContainerCreator struct {
 	processExecutor          processExecutor
 	containerNetworkPreparer containerNetworkPreparer
 	containerCgroupPreparer  containerCgroupPreparer
+	containerStatusManager   status.ContainerStatusManager
 }
 
 // Create executes the container creation pipeline for the given container ID.
@@ -54,8 +58,22 @@ func (c *ContainerCreator) Create(opt CreateOption) error {
 		return err
 	}
 
+	// create state.json
+	//   status = creating
+	//   pid = 0
+	if err := c.containerStatusManager.CreateStatusFile(
+		opt.ContainerId,
+		0,
+		status.CREATING,
+		spec.Root.Path,
+		utils.ContainerDir(opt.ContainerId),
+		spec.Annotations,
+	); err != nil {
+		return err
+	}
+
 	// create fifo
-	fifo := fifoPath(opt.ContainerId)
+	fifo := utils.FifoPath(opt.ContainerId)
 	if err := c.fifoCreator.createFifo(fifo); err != nil {
 		return err
 	}
@@ -82,6 +100,17 @@ func (c *ContainerCreator) Create(opt CreateOption) error {
 
 	// network setup
 	if err := c.containerNetworkPreparer.prepare(opt.ContainerId, initPid, spec.Annotations); err != nil {
+		return err
+	}
+
+	// update state.json
+	//   status = created
+	//   pid    = init pid
+	if err := c.containerStatusManager.UpdateStatus(
+		opt.ContainerId,
+		status.CREATED,
+		initPid,
+	); err != nil {
 		return err
 	}
 

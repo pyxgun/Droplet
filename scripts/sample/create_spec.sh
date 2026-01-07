@@ -4,8 +4,8 @@ CID=123456
 ROOTFS=/etc/raind/container/$CID/merged
 CWD=/
 #CMD='/usr/bin/python3 -m http.server 8777'
-#CMD='/bin/sh -c "echo hello world!; sleep 60"'
-CMD='/bin/sh'
+CMD='/bin/sh -c "echo hello world!; sleep 60"'
+#CMD='/bin/sh'
 HOSTNAME=$CID
 
 HOST_IF_NAME=wlan0
