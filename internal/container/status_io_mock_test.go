@@ -5,7 +5,6 @@ import "droplet/internal/status"
 type mockStatusHandler struct {
 	// CreateStatusFile()
 	createStatusFileCallFlag    bool
-	createStatusFilePath        string
 	createStatusFileContainerId string
 	createStatusFilePid         int
 	createStatusFileStatus      status.ContainerStatus
@@ -14,16 +13,26 @@ type mockStatusHandler struct {
 
 	// UpdateStatus()
 	updateStatusCallFlag    bool
-	updateStatusPath        string
 	updateStatusContainerId string
 	updateStatusStatus      status.ContainerStatus
 	updateStatusPid         int
 	updateStatusErr         error
+
+	// GetPidFromId()
+	getPidFromIdCallFlag    bool
+	getPirFromIdContainerId string
+	getPidFromIdPid         int
+	getPidFromIdErr         error
+
+	// GetStatusFromId()
+	getStatusFromIdCallFlag    bool
+	getStatusFromIdContainerId string
+	getStatusFromIdStatus      status.ContainerStatus
+	getStatusFromIdErr         error
 }
 
-func (m *mockStatusHandler) CreateStatusFile(path string, containerId string, pid int, status status.ContainerStatus, bundle string) error {
+func (m *mockStatusHandler) CreateStatusFile(containerId string, pid int, status status.ContainerStatus, bundle string) error {
 	m.createStatusFileCallFlag = true
-	m.createStatusFilePath = path
 	m.createStatusFileContainerId = containerId
 	m.createStatusFilePid = pid
 	m.createStatusFileStatus = status
@@ -31,11 +40,22 @@ func (m *mockStatusHandler) CreateStatusFile(path string, containerId string, pi
 	return m.createStatusFileErr
 }
 
-func (m *mockStatusHandler) UpdateStatus(path string, containerId string, status status.ContainerStatus, pid int) error {
+func (m *mockStatusHandler) UpdateStatus(containerId string, status status.ContainerStatus, pid int) error {
 	m.updateStatusCallFlag = true
-	m.updateStatusPath = path
 	m.updateStatusContainerId = containerId
 	m.updateStatusStatus = status
 	m.updateStatusPid = pid
 	return m.updateStatusErr
+}
+
+func (m *mockStatusHandler) GetPidFromId(containerId string) (int, error) {
+	m.getPidFromIdCallFlag = true
+	m.getPirFromIdContainerId = containerId
+	return m.getPidFromIdPid, m.getPidFromIdErr
+}
+
+func (m *mockStatusHandler) GetStatusFromId(containerId string) (status.ContainerStatus, error) {
+	m.getStatusFromIdCallFlag = true
+	m.getStatusFromIdContainerId = containerId
+	return m.getStatusFromIdStatus, m.getStatusFromIdErr
 }

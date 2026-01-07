@@ -49,6 +49,7 @@ func TestContainerRun_Run_InteractiveSuccess(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -105,6 +106,7 @@ func TestContainerRun_Run_NonInteractiveSuccess(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -153,6 +155,7 @@ func TestContainerRun_Run_LoadFileError(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -193,6 +196,7 @@ func TestContainerRun_Run_CreateFifoError(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -233,6 +237,7 @@ func TestContainerRun_Run_CgroupPrepareError(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -274,6 +279,7 @@ func TestContainerRun_Run_NetworkPrepareError(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -315,6 +321,7 @@ func TestContainerRun_Run_StartError(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -355,6 +362,7 @@ func TestContainerRun_Run_WaitError(t *testing.T) {
 		containerStart:           mockContainerStart,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==

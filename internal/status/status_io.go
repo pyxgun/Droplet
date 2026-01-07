@@ -1,25 +1,32 @@
 package status
 
 import (
+	"droplet/internal/oci"
 	"droplet/internal/utils"
-	"path/filepath"
+	"syscall"
 )
 
 type ContainerStatusManager interface {
-	CreateStatusFile(path string, containerId string, pid int, status ContainerStatus, bundle string) error
-	UpdateStatus(path string, containerId string, status ContainerStatus, pid int) error
+	CreateStatusFile(containerId string, pid int, status ContainerStatus, bundle string) error
+	UpdateStatus(containerId string, status ContainerStatus, pid int) error
+	GetPidFromId(containerId string) (int, error)
+	GetStatusFromId(containerId string) (ContainerStatus, error)
 }
 
 func NewStatusHandler() *StatusHandler {
-	return &StatusHandler{}
+	return &StatusHandler{
+		processManager: NewProcessHandler(),
+	}
 }
 
-type StatusHandler struct{}
+type StatusHandler struct {
+	processManager ProcessManager
+}
 
-func (h *StatusHandler) CreateStatusFile(path string, containerId string, pid int, status ContainerStatus, bundle string) error {
-	stateFilePath := filepath.Join(path, "state.json")
+func (h *StatusHandler) CreateStatusFile(containerId string, pid int, status ContainerStatus, bundle string) error {
+	stateFilePath := utils.ContainerStatePath(containerId)
 	statusObject := StatusObject{
-		OciVersion: "1.3.0",
+		OciVersion: oci.OCIVersion,
 		Id:         containerId,
 		Status:     status.String(),
 		Pid:        pid,
@@ -33,8 +40,8 @@ func (h *StatusHandler) CreateStatusFile(path string, containerId string, pid in
 	return nil
 }
 
-func (h *StatusHandler) UpdateStatus(path string, containerId string, status ContainerStatus, pid int) error {
-	stateFilePath := filepath.Join(path, "state.json")
+func (h *StatusHandler) UpdateStatus(containerId string, status ContainerStatus, pid int) error {
+	stateFilePath := utils.ContainerStatePath(containerId)
 	// load status file
 	var statusObject StatusObject
 	if err := utils.ReadJsonFile(stateFilePath, &statusObject); err != nil {
@@ -45,10 +52,9 @@ func (h *StatusHandler) UpdateStatus(path string, containerId string, status Con
 	if status >= 0 && status <= 3 {
 		statusObject.Status = status.String()
 	}
-	if pid > 0 {
+	if pid >= 0 {
 		statusObject.Pid = pid
 	}
-	statusObject.Status = status.String()
 
 	// write status file
 	if err := utils.WriteJsonToFile(stateFilePath, statusObject); err != nil {
@@ -56,4 +62,94 @@ func (h *StatusHandler) UpdateStatus(path string, containerId string, status Con
 	}
 
 	return nil
+}
+
+func (h *StatusHandler) GetPidFromId(containerId string) (int, error) {
+	stateFilePath := utils.ContainerStatePath(containerId)
+	// load status file
+	var statusObject StatusObject
+	if err := utils.ReadJsonFile(stateFilePath, &statusObject); err != nil {
+		return -1, err
+	}
+
+	return statusObject.Pid, nil
+}
+
+func (h *StatusHandler) GetStatusFromId(containerId string) (ContainerStatus, error) {
+	stateFilePath := utils.ContainerStatePath(containerId)
+	// load status file
+	var statusObject StatusObject
+	if err := utils.ReadJsonFile(stateFilePath, &statusObject); err != nil {
+		return -1, err
+	}
+	pid := statusObject.Pid
+	currentStatus, parseErr := ParseContainerStatus(statusObject.Status)
+	if parseErr != nil {
+		return -1, parseErr
+	}
+
+	// recompute status
+	if err := h.recomputeStatus(containerId, pid, currentStatus); err != nil {
+		return -1, err
+	}
+
+	if err := utils.ReadJsonFile(stateFilePath, &statusObject); err != nil {
+		return -1, err
+	}
+	newStatus, newParseErr := ParseContainerStatus(statusObject.Status)
+	if newParseErr != nil {
+		return -1, newParseErr
+	}
+
+	return newStatus, nil
+}
+
+func (h *StatusHandler) recomputeStatus(containerId string, pid int, currentStatus ContainerStatus) error {
+	if currentStatus == RUNNING {
+		alive, _ := h.pidAlive(pid)
+		if !alive {
+			if err := h.UpdateStatus(containerId, STOPPED, 0); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (h *StatusHandler) pidAlive(pid int) (bool, error) {
+	if pid <= 0 {
+		// process not exist
+		return false, nil
+	}
+
+	// send 0 signal to process
+	err := h.processManager.Kill(pid, 0)
+	if err == nil {
+		// process exist
+		return true, nil
+	}
+	if err == syscall.ESRCH {
+		// no such process
+		return false, nil
+	}
+	if err == syscall.EPERM {
+		// operation not permitted, but process exist
+		return true, nil
+	}
+
+	return false, nil
+}
+
+type ProcessManager interface {
+	Kill(pid int, sig syscall.Signal) error
+}
+
+func NewProcessHandler() *ProcessHandler {
+	return &ProcessHandler{}
+}
+
+type ProcessHandler struct{}
+
+func (h *ProcessHandler) Kill(pid int, sig syscall.Signal) error {
+	return syscall.Kill(pid, sig)
 }

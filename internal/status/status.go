@@ -1,5 +1,10 @@
 package status
 
+import (
+	"fmt"
+	"strings"
+)
+
 type StatusObject struct {
 	OciVersion string `json:"ociVersion"`
 	Id         string `json:"id"`
@@ -35,5 +40,20 @@ func (s ContainerStatus) String() string {
 		return "stopped"
 	default:
 		return "unknown"
+	}
+}
+
+func ParseContainerStatus(s string) (ContainerStatus, error) {
+	switch strings.ToLower(s) {
+	case "creating":
+		return CREATING, nil
+	case "created":
+		return CREATED, nil
+	case "running":
+		return RUNNING, nil
+	case "stopped":
+		return STOPPED, nil
+	default:
+		return 0, fmt.Errorf("invalid status: %q", s)
 	}
 }

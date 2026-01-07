@@ -6,6 +6,7 @@ import (
 
 	"droplet/internal/spec"
 	"droplet/internal/status"
+	"droplet/internal/utils"
 )
 
 // NewContainerCreator constructs a ContainerCreator with the default
@@ -55,11 +56,10 @@ func (c *ContainerCreator) Create(opt CreateOption) error {
 	//   status = creating
 	//   pid = 0
 	if err := c.containerStatusManager.CreateStatusFile(
-		containerDir(opt.ContainerId),
 		opt.ContainerId,
 		0,
 		status.CREATING,
-		containerDir(opt.ContainerId),
+		utils.ContainerDir(opt.ContainerId),
 	); err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (c *ContainerCreator) Create(opt CreateOption) error {
 	}
 
 	// create fifo
-	fifo := fifoPath(opt.ContainerId)
+	fifo := utils.FifoPath(opt.ContainerId)
 	if err := c.fifoCreator.createFifo(fifo); err != nil {
 		return err
 	}
@@ -105,7 +105,6 @@ func (c *ContainerCreator) Create(opt CreateOption) error {
 	//   status = created
 	//   pid    = init pid
 	if err := c.containerStatusManager.UpdateStatus(
-		containerDir(opt.ContainerId),
 		opt.ContainerId,
 		status.CREATED,
 		initPid,

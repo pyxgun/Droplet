@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"droplet/internal/oci"
 	"droplet/internal/utils"
 	"fmt"
 	"path/filepath"
@@ -243,15 +244,14 @@ func buildAnnotationSpec(opts ConfigOptions) AnnotationObject {
 	netSpec, _ := utils.JsonToString(buildNetSpec(opts))
 	imageSpec, _ := utils.JsonToString(buildImageSpec(opts))
 	return AnnotationObject{
-		Version: "0.1.0", // annotation version: 0.1.0
+		Version: oci.AnnotationVersion,
 		Net:     netSpec,
 		Image:   imageSpec,
 	}
 }
 
 func buildSpec(opts ConfigOptions) Spec {
-	// OCI Version: 1.3.0
-	ociVersion := "1.3.0"
+	ociVersion := oci.OCIVersion
 
 	// root path
 	root := buildRootSpec(opts)

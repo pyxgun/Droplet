@@ -2,6 +2,7 @@ package container
 
 import (
 	"droplet/internal/status"
+	"droplet/internal/utils"
 )
 
 // NewContainerStart returns a ContainerStart wired with the default
@@ -37,7 +38,7 @@ type ContainerStart struct {
 //
 // An error is returned if either the write or removal operation fails.
 func (c *ContainerStart) Execute(opt StartOption) error {
-	fifo := fifoPath(opt.ContainerId)
+	fifo := utils.FifoPath(opt.ContainerId)
 
 	// write fifo
 	if err := c.fifoHandler.writeFifo(fifo); err != nil {
@@ -52,7 +53,6 @@ func (c *ContainerStart) Execute(opt StartOption) error {
 	// update status file
 	//   status = running
 	if err := c.containerStatusManager.UpdateStatus(
-		containerDir(opt.ContainerId),
 		opt.ContainerId,
 		status.RUNNING,
 		-1, // no update
