@@ -7,6 +7,7 @@ import (
 	"droplet/internal/utils"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type ContainerHookController interface {
@@ -40,14 +41,14 @@ func (c *HookController) RunCreateContainerHooks(containerId string, hookList []
 	if hookList == nil || len(hookList) == 0 {
 		return nil
 	}
-	return c.runHookList(containerId, "createContainer", hookList)
+	return c.runHookListWithNsenter(containerId, "createContainer", hookList)
 }
 
 func (c *HookController) RunStartContainerHooks(containerId string, hookList []spec.HookObject) error {
 	if hookList == nil || len(hookList) == 0 {
 		return nil
 	}
-	return c.runHookList(containerId, "startContainer", hookList)
+	return c.runHookListWithNsenter(containerId, "startContainer", hookList)
 }
 
 func (c *HookController) RunPoststartHooks(containerId string, hookList []spec.HookObject) error {
@@ -84,6 +85,54 @@ func (c *HookController) runHookList(containerId string, phase string, hookList 
 
 		// prepare hook environment
 		cmd := c.commandFactory.Command(hook.Path, args...)
+		cmd.SetEnv(append(os.Environ(), hook.Env...))
+		cmd.SetStdin(bytes.NewReader([]byte(stateJson)))
+		cmd.SetStdout(os.Stdout)
+		cmd.SetStderr(os.Stderr)
+
+		// execute hook
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("hook %s[%d] failed: %w", phase, i, err)
+		}
+	}
+	return nil
+}
+
+func (c *HookController) runHookListWithNsenter(containerId string, phase string, hookList []spec.HookObject) error {
+	// read state.json
+	stateJson, err := c.containerStatusManager.ReadStatusFile(containerId)
+	if err != nil {
+		return err
+	}
+
+	// get pid
+	initPid, err := c.containerStatusManager.GetPidFromId(containerId)
+	if err != nil {
+		return err
+	}
+
+	for i, hook := range hookList {
+		if hook.Path == "" {
+			return fmt.Errorf("hook %s[%d]: empty path", phase, i)
+		}
+
+		// set args
+		args := hook.Args
+		if len(args) == 0 {
+			args = []string{}
+		}
+
+		// prepare hook environment with nsenter
+		nsenterArgs := []string{
+			"nsenter",
+			"-t", strconv.Itoa(initPid),
+			"-m", "-u", "-i", "-n", "-p",
+			"--",
+			hook.Path,
+		}
+		nsenterArgs = append(nsenterArgs, args...)
+
+		cmd := c.commandFactory.Command("/usr/bin/nsenter", nsenterArgs...)
 		cmd.SetEnv(append(os.Environ(), hook.Env...))
 		cmd.SetStdin(bytes.NewReader([]byte(stateJson)))
 		cmd.SetStdout(os.Stdout)
