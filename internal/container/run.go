@@ -1,6 +1,8 @@
 package container
 
 import (
+	"droplet/internal/status"
+	"droplet/internal/utils"
 	"fmt"
 	"os"
 )
@@ -21,6 +23,7 @@ func NewContainerRun() *ContainerRun {
 		containerStart:           NewContainerStart(),
 		containerCgroupPreparer:  newContainerCgroupController(),
 		containerNetworkPreparer: newContainerNetworkController(),
+		containerStatusManager:   status.NewStatusHandler(),
 	}
 }
 
@@ -43,6 +46,7 @@ type ContainerRun struct {
 	containerStart           *ContainerStart
 	containerCgroupPreparer  containerCgroupPreparer
 	containerNetworkPreparer containerNetworkPreparer
+	containerStatusManager   status.ContainerStatusManager
 }
 
 // Run executes the container run pipeline for the provided container ID.
@@ -60,8 +64,22 @@ func (c *ContainerRun) Run(opt RunOption) error {
 		return err
 	}
 
+	// create state.json
+	//   status = creating
+	//   pid = 0
+	if err := c.containerStatusManager.CreateStatusFile(
+		opt.ContainerId,
+		0,
+		status.CREATING,
+		spec.Root.Path,
+		utils.ContainerDir(opt.ContainerId),
+		spec.Annotations,
+	); err != nil {
+		return err
+	}
+
 	// 2. create fifo
-	fifo := fifoPath(opt.ContainerId)
+	fifo := utils.FifoPath(opt.ContainerId)
 	if err := c.fifoCreator.createFifo(fifo); err != nil {
 		return err
 	}
@@ -89,23 +107,35 @@ func (c *ContainerRun) Run(opt RunOption) error {
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+	initPid := cmd.Pid()
 
 	// output when init process has been created
 	// if --print-pid is setted, print message with pid
 	// otherwise print message with Container ID
 	if opt.PrintPidFlag {
-		fmt.Printf("create container success. pid: %d\n", cmd.Pid())
+		fmt.Printf("create container success. pid: %d\n", initPid)
 	} else {
 		fmt.Printf("create container success. ID: %s\n", opt.ContainerId)
 	}
 
 	// cgroup setup
-	if err := c.containerCgroupPreparer.prepare(opt.ContainerId, spec, cmd.Pid()); err != nil {
+	if err := c.containerCgroupPreparer.prepare(opt.ContainerId, spec, initPid); err != nil {
 		return err
 	}
 
 	// network setup
-	if err := c.containerNetworkPreparer.prepare(opt.ContainerId, cmd.Pid(), spec.Annotations); err != nil {
+	if err := c.containerNetworkPreparer.prepare(opt.ContainerId, initPid, spec.Annotations); err != nil {
+		return err
+	}
+
+	// update state.json
+	//   status = created
+	//   pid    = init pid
+	if err := c.containerStatusManager.UpdateStatus(
+		opt.ContainerId,
+		status.CREATED,
+		initPid,
+	); err != nil {
 		return err
 	}
 
@@ -116,9 +146,29 @@ func (c *ContainerRun) Run(opt RunOption) error {
 		return err
 	}
 
+	// update state.json
+	//   status = running
+	if err := c.containerStatusManager.UpdateStatus(
+		opt.ContainerId,
+		status.RUNNING,
+		-1, // no update
+	); err != nil {
+		return err
+	}
+
 	// 6. wait init process
 	if opt.Interactive {
 		if err := cmd.Wait(); err != nil {
+			return err
+		}
+
+		// update state.json
+		//   status = stopped
+		if err := c.containerStatusManager.UpdateStatus(
+			opt.ContainerId,
+			status.STOPPED,
+			0,
+		); err != nil {
 			return err
 		}
 	}

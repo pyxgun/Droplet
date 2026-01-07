@@ -47,12 +47,14 @@ func TestContainerCreator_Create_Success(t *testing.T) {
 	mockProcessExecutor := &mockContainerInitExecutor{}
 	mockContainerNetworkController := &mockContainerNetworkController{}
 	mockeContainerCgroupController := &mockeContainerCgroupController{}
+	mockContainerStatusManager := &mockStatusHandler{}
 	mockContainerCreator := ContainerCreator{
 		specLoader:               mockSpecLoader,
 		fifoCreator:              mockFifoCreator,
 		processExecutor:          mockProcessExecutor,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -82,12 +84,14 @@ func TestContainerCreator_Create_LoadFileError(t *testing.T) {
 	mockProcessExecutor := &mockContainerInitExecutor{}
 	mockContainerNetworkController := &mockContainerNetworkController{}
 	mockeContainerCgroupController := &mockeContainerCgroupController{}
+	mockContainerStatusManager := &mockStatusHandler{}
 	mockContainerCreator := ContainerCreator{
 		specLoader:               mockSpecLoader,
 		fifoCreator:              mockFifoCreator,
 		processExecutor:          mockProcessExecutor,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -108,12 +112,14 @@ func TestContainerCreator_Create_CreateFifoError(t *testing.T) {
 	mockProcessExecutor := &mockContainerInitExecutor{}
 	mockContainerNetworkController := &mockContainerNetworkController{}
 	mockeContainerCgroupController := &mockeContainerCgroupController{}
+	mockContainerStatusManager := &mockStatusHandler{}
 	mockContainerCreator := ContainerCreator{
 		specLoader:               mockSpecLoader,
 		fifoCreator:              mockFifoCreator,
 		processExecutor:          mockProcessExecutor,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -134,12 +140,14 @@ func TestContainerCreator_Create_ExecuteInitError(t *testing.T) {
 	}
 	mockContainerNetworkController := &mockContainerNetworkController{}
 	mockeContainerCgroupController := &mockeContainerCgroupController{}
+	mockContainerStatusManager := &mockStatusHandler{}
 	mockContainerCreator := ContainerCreator{
 		specLoader:               mockSpecLoader,
 		fifoCreator:              mockFifoCreator,
 		processExecutor:          mockProcessExecutor,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -160,12 +168,14 @@ func TestContainerCreator_Create_CgroupPrepareError(t *testing.T) {
 	mockeContainerCgroupController := &mockeContainerCgroupController{
 		prepareErr: errors.New("prepare() failed"),
 	}
+	mockContainerStatusManager := &mockStatusHandler{}
 	mockContainerCreator := ContainerCreator{
 		specLoader:               mockSpecLoader,
 		fifoCreator:              mockFifoCreator,
 		processExecutor:          mockProcessExecutor,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -186,12 +196,14 @@ func TestContainerCreator_Create_NetworkPrepareError(t *testing.T) {
 		prepareErr: errors.New("prepare() failed"),
 	}
 	mockeContainerCgroupController := &mockeContainerCgroupController{}
+	mockContainerStatusManager := &mockStatusHandler{}
 	mockContainerCreator := ContainerCreator{
 		specLoader:               mockSpecLoader,
 		fifoCreator:              mockFifoCreator,
 		processExecutor:          mockProcessExecutor,
 		containerNetworkPreparer: mockContainerNetworkController,
 		containerCgroupPreparer:  mockeContainerCgroupController,
+		containerStatusManager:   mockContainerStatusManager,
 	}
 
 	// == act ==

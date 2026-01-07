@@ -134,6 +134,7 @@ type containerEnvPrepareSyscallHandler interface {
 	Lstat(name string) (os.FileInfo, error)
 	OpenFile(name string, flag int, perm os.FileMode) (*os.File, error)
 	WriteFile(name string, data []byte, perm os.FileMode) error
+	Kill(pid int, sig syscall.Signal) error
 }
 
 // newSyscallHandler returns a kernelSyscall that delegates to
@@ -294,4 +295,8 @@ func (k *kernelSyscall) OpenFile(name string, flag int, perm os.FileMode) (*os.F
 
 func (k *kernelSyscall) WriteFile(name string, data []byte, perm os.FileMode) error {
 	return os.WriteFile(name, data, perm)
+}
+
+func (h *kernelSyscall) Kill(pid int, sig syscall.Signal) error {
+	return syscall.Kill(pid, sig)
 }

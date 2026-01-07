@@ -23,7 +23,7 @@ func buildMockSpec(t *testing.T) spec.Spec {
 	t.Helper()
 
 	return spec.Spec{
-		OciVersion: "1.2.0",
+		OciVersion: "1.3.0",
 		Root: spec.RootObject{
 			Path: "/etc/raind/container/mycontainer/merge",
 		},

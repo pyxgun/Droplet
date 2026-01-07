@@ -30,8 +30,10 @@ func TestContainerStart_Success(t *testing.T) {
 	// == arrange ==
 	opts := buildStartOption(t)
 	mockCotainerFifoHandler := &mockCotainerFifoHandler{}
+	mockContainerStatusManager := &mockStatusHandler{}
 	containerStart := &ContainerStart{
-		fifoHandler: mockCotainerFifoHandler,
+		fifoHandler:            mockCotainerFifoHandler,
+		containerStatusManager: mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -56,8 +58,10 @@ func TestContainerStart_WriteFifoError(t *testing.T) {
 	mockCotainerFifoHandler := &mockCotainerFifoHandler{
 		writeFifoErr: errors.New("writeFifo() failed"),
 	}
+	mockContainerStatusManager := &mockStatusHandler{}
 	containerStart := &ContainerStart{
-		fifoHandler: mockCotainerFifoHandler,
+		fifoHandler:            mockCotainerFifoHandler,
+		containerStatusManager: mockContainerStatusManager,
 	}
 
 	// == act ==
@@ -74,8 +78,10 @@ func TestContainerStart_RemoveFifoError(t *testing.T) {
 	mockCotainerFifoHandler := &mockCotainerFifoHandler{
 		removeFifoErr: errors.New("removeFifo() failed"),
 	}
+	mockContainerStatusManager := &mockStatusHandler{}
 	containerStart := &ContainerStart{
-		fifoHandler: mockCotainerFifoHandler,
+		fifoHandler:            mockCotainerFifoHandler,
+		containerStatusManager: mockContainerStatusManager,
 	}
 
 	// == act ==

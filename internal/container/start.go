@@ -1,11 +1,17 @@
 package container
 
+import (
+	"droplet/internal/status"
+	"droplet/internal/utils"
+)
+
 // NewContainerStart returns a ContainerStart wired with the default
 // FIFO handler implementation. This is the standard entry point for
 // executing the container start phase.
 func NewContainerStart() *ContainerStart {
 	return &ContainerStart{
-		fifoHandler: newContainerFifoHandler(),
+		fifoHandler:            newContainerFifoHandler(),
+		containerStatusManager: status.NewStatusHandler(),
 	}
 }
 
@@ -20,6 +26,7 @@ type ContainerStart struct {
 		writeFifo(path string) error
 		removeFifo(path string) error
 	}
+	containerStatusManager status.ContainerStatusManager
 }
 
 // Execute performs the container start sequence for the given container.
@@ -31,7 +38,7 @@ type ContainerStart struct {
 //
 // An error is returned if either the write or removal operation fails.
 func (c *ContainerStart) Execute(opt StartOption) error {
-	fifo := fifoPath(opt.ContainerId)
+	fifo := utils.FifoPath(opt.ContainerId)
 
 	// write fifo
 	if err := c.fifoHandler.writeFifo(fifo); err != nil {
@@ -40,6 +47,16 @@ func (c *ContainerStart) Execute(opt StartOption) error {
 
 	// remove fifo
 	if err := c.fifoHandler.removeFifo(fifo); err != nil {
+		return err
+	}
+
+	// update status file
+	//   status = running
+	if err := c.containerStatusManager.UpdateStatus(
+		opt.ContainerId,
+		status.RUNNING,
+		-1, // no update
+	); err != nil {
 		return err
 	}
 

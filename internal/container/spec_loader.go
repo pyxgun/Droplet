@@ -2,6 +2,7 @@ package container
 
 import (
 	"droplet/internal/spec"
+	"droplet/internal/utils"
 )
 
 // specLoader loads an OCI runtime specification for a container.
@@ -32,6 +33,6 @@ type fileSpecLoader struct{}
 // The configuration is read from the container's config.json file.
 // An error is returned if the file cannot be read or parsed.
 func (f *fileSpecLoader) loadFile(containerId string) (spec.Spec, error) {
-	path := configFilePath(containerId)
+	path := utils.ConfigFilePath(containerId)
 	return spec.LoadConfigFile(path)
 }

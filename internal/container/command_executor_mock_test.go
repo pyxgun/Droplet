@@ -206,6 +206,12 @@ type mockKernelSyscall struct {
 	writeFileData     []byte
 	writeFilePerm     os.FileMode
 	writeFileErr      error
+
+	// Kill()
+	killCallFlag bool
+	killPid      int
+	killSig      syscall.Signal
+	killErr      error
 }
 
 func (m *mockKernelSyscall) Exec(argv0 string, argv []string, envv []string) error {
@@ -360,3 +366,10 @@ func (m mockFileInfo) Mode() os.FileMode  { return 0 }
 func (m mockFileInfo) ModTime() time.Time { return time.Time{} }
 func (m mockFileInfo) IsDir() bool        { return m.dir }
 func (m mockFileInfo) Sys() interface{}   { return nil }
+
+func (m *mockKernelSyscall) Kill(pid int, sig syscall.Signal) error {
+	m.killCallFlag = true
+	m.killPid = pid
+	m.killSig = sig
+	return m.killErr
+}
