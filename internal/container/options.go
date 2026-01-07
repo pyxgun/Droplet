@@ -24,3 +24,10 @@ type RunOption struct {
 	Interactive  bool
 	PrintPidFlag bool
 }
+
+// exec options
+type ExecOption struct {
+	ContainerId string
+	Interactive bool
+	Entrypoint  []string
+}
