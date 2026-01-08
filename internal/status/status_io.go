@@ -268,6 +268,12 @@ func (h *StatusHandler) ListContainers() ([]StatusObject, error) {
 			return nil, err
 		}
 
+		// reload status file
+		if err := utils.ReadJsonFile(stateFilePath, &statusObject); err != nil {
+			// skip if state.json is not exist
+			continue
+		}
+
 		list = append(list, statusObject)
 	}
 
