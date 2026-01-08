@@ -51,7 +51,7 @@ func (c *ContainerDelete) Delete(opt DeleteOption) error {
 		return err
 	}
 	if containerStatus == status.RUNNING {
-		return fmt.Errorf("container: %s is running.", opt.ContainerId)
+		return fmt.Errorf("container: %s is not stopped. current status: %s", opt.ContainerId, containerStatus)
 	}
 
 	// 2. load config.json

@@ -21,6 +21,7 @@ type ContainerStatusManager interface {
 	UpdateStatus(containerId string, status ContainerStatus, pid int) error
 	GetPidFromId(containerId string) (int, error)
 	GetStatusFromId(containerId string) (ContainerStatus, error)
+	ListContainers() ([]StatusObject, error)
 }
 
 // NewStatusHandler constructs a StatusHandler with the default
@@ -232,4 +233,43 @@ func (h *StatusHandler) pidAlive(pid int) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (h *StatusHandler) ListContainers() ([]StatusObject, error) {
+	var list []StatusObject
+
+	containerBaseDir := utils.DefaultRootDir()
+
+	entries, err := h.syscallHandler.ReadDir(containerBaseDir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		containerId := entry.Name()
+		stateFilePath := utils.ContainerStatePath(containerId)
+		// load status file
+		var statusObject StatusObject
+		if err := utils.ReadJsonFile(stateFilePath, &statusObject); err != nil {
+			// skip if state.json is not exist
+			continue
+		}
+
+		// recompute status
+		currentStatus, err := ParseContainerStatus(statusObject.Status)
+		if err != nil {
+			return nil, err
+		}
+		if err := h.recomputeStatus(statusObject.Id, statusObject.Pid, currentStatus); err != nil {
+			return nil, err
+		}
+
+		list = append(list, statusObject)
+	}
+
+	return list, nil
 }

@@ -4,6 +4,7 @@ import (
 	"droplet/internal/hook"
 	"droplet/internal/status"
 	"droplet/internal/utils"
+	"fmt"
 )
 
 // NewContainerStart returns a ContainerStart wired with the default
@@ -43,13 +44,23 @@ type ContainerStart struct {
 //
 // An error is returned if either the write or removal operation fails.
 func (c *ContainerStart) Execute(opt StartOption) error {
-	// 1. load config.json
+	// 1. check container status
+	//    if status is running, return error
+	containerStatus, err := c.containerStatusManager.GetStatusFromId(opt.ContainerId)
+	if err != nil {
+		return err
+	}
+	if containerStatus != status.CREATED {
+		return fmt.Errorf("container: %s is not created. currnet status: %s", opt.ContainerId, containerStatus)
+	}
+
+	// 2. load config.json
 	spec, err := c.specLoader.loadFile(opt.ContainerId)
 	if err != nil {
 		return err
 	}
 
-	// 2. HOOK: startContainer
+	// 3. HOOK: startContainer
 	if err := c.containerHookController.RunStartContainerHooks(
 		opt.ContainerId,
 		spec.Hooks.StartContainer,
@@ -57,18 +68,18 @@ func (c *ContainerStart) Execute(opt StartOption) error {
 		return err
 	}
 
-	// 3. write fifo
+	// 4. write fifo
 	fifo := utils.FifoPath(opt.ContainerId)
 	if err := c.fifoHandler.writeFifo(fifo); err != nil {
 		return err
 	}
 
-	// 4. remove fifo
+	// 5. remove fifo
 	if err := c.fifoHandler.removeFifo(fifo); err != nil {
 		return err
 	}
 
-	// 5. update status file
+	// 6. update status file
 	//      status = running
 	if err := c.containerStatusManager.UpdateStatus(
 		opt.ContainerId,
@@ -78,7 +89,7 @@ func (c *ContainerStart) Execute(opt StartOption) error {
 		return err
 	}
 
-	// 6. HOOK: poststart
+	// 7. HOOK: poststart
 	if err := c.containerHookController.RunPoststartHooks(
 		opt.ContainerId,
 		spec.Hooks.Poststart,
