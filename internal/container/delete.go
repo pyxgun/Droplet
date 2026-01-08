@@ -3,6 +3,7 @@ package container
 import (
 	"droplet/internal/hook"
 	"droplet/internal/status"
+	"droplet/internal/utils"
 	"fmt"
 )
 
@@ -12,6 +13,7 @@ import (
 func NewContainerDelete() *ContainerDelete {
 	return &ContainerDelete{
 		specLoader:              newFileSpecLoader(),
+		fifoHandler:             newContainerFifoHandler(),
 		containerStatusManager:  status.NewStatusHandler(),
 		containerHookController: hook.NewHookController(),
 	}
@@ -28,7 +30,10 @@ func NewContainerDelete() *ContainerDelete {
 // Low-level operations are delegated to its collaborators so that
 // the logic can be tested and substituted.
 type ContainerDelete struct {
-	specLoader              specLoader
+	specLoader  specLoader
+	fifoHandler interface {
+		removeFifo(path string) error
+	}
 	containerStatusManager  status.ContainerStatusManager
 	containerHookController hook.ContainerHookController
 }
@@ -40,6 +45,7 @@ type ContainerDelete struct {
 //  2. Load the OCI spec (config.json)
 //  3. Run poststop hooks
 //  4. Remove the container state file (state.json)
+//  5. Remove the FIFO if the container status is created
 //
 // If any step fails, the error is returned immediately and subsequent
 // steps are not executed.
@@ -71,6 +77,13 @@ func (c *ContainerDelete) Delete(opt DeleteOption) error {
 	// 4. remove state.json
 	if err := c.containerStatusManager.RemoveStatusFile(opt.ContainerId); err != nil {
 		return err
+	}
+
+	// 5. remove exec.fifo if status is created
+	if containerStatus == status.CREATED {
+		if err := c.fifoHandler.removeFifo(utils.FifoPath(opt.ContainerId)); err != nil {
+			return err
+		}
 	}
 
 	return nil
