@@ -34,8 +34,9 @@ func NewContainerInit() *ContainerInit {
 // execution environments.
 func newRootContainerEnvPrepare() *rootContainerEnvPreparer {
 	return &rootContainerEnvPreparer{
-		syscallHandler: utils.NewSyscallHandler(),
-		seccompHandler: NewSeccompManager(),
+		syscallHandler:  utils.NewSyscallHandler(),
+		seccompHandler:  NewSeccompManager(),
+		appArmorHandler: NewAppArmorManager(),
 	}
 }
 
@@ -110,8 +111,9 @@ type containerEnvPreparer interface {
 // capability adjustments, etc.) may be added to this implementation as
 // container initialization evolves.
 type rootContainerEnvPreparer struct {
-	syscallHandler utils.KernelSyscallHandler
-	seccompHandler SeccompHandler
+	syscallHandler  utils.KernelSyscallHandler
+	seccompHandler  SeccompHandler
+	appArmorHandler AppArmorHandler
 }
 
 // prepare sets up the runtime environment for the root container process
@@ -166,7 +168,11 @@ func (p *rootContainerEnvPreparer) prepare(containerId string, spec spec.Spec) e
 	if err := p.setCapability(spec.Process.Capabilities); err != nil {
 		return err
 	}
-	// 10. install seccomp (NO_NEW_PRIVS + filter)
+	// 10. apply AppArmor
+	if err := p.appArmorHandler.ApplyAAProfile(spec.LinuxSpec.AppArmorProfile); err != nil {
+		return err
+	}
+	// 11. install seccomp (NO_NEW_PRIVS + filter)
 	if err := p.seccompHandler.InstallDenyFilter(*spec.LinuxSpec.Seccomp); err != nil {
 		return err
 	}

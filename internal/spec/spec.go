@@ -76,9 +76,10 @@ type SeccompObject struct {
 }
 
 type LinuxSpecObject struct {
-	Resources  ResourceObject    `json:"resources"`
-	Namespaces []NamespaceObject `json:"namespaces"`
-	Seccomp    *SeccompObject    `json:"seccomp,omitempty"`
+	Resources       ResourceObject    `json:"resources"`
+	Namespaces      []NamespaceObject `json:"namespaces"`
+	Seccomp         *SeccompObject    `json:"seccomp,omitempty"`
+	AppArmorProfile string            `json:"apparmorProfile,omitempty"`
 }
 
 type AnnotationObject struct {

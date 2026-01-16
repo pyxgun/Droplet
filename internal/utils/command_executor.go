@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
 func NewCommandFactory() *ExecCommandFactory {
@@ -140,6 +142,7 @@ type KernelSyscallHandler interface {
 	Symlink(oldname string, newname string) error
 	Lstat(name string) (os.FileInfo, error)
 	OpenFile(name string, flag int, perm os.FileMode) (*os.File, error)
+	UnixOpen(path string, mode int, perm uint32) (fd int, err error)
 	WriteFile(name string, data []byte, perm os.FileMode) error
 	Kill(pid int, sig syscall.Signal) error
 	Setenv(key string, value string) error
@@ -307,6 +310,10 @@ func (k *kernelSyscall) Lstat(name string) (os.FileInfo, error) {
 // O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, and O_EXCL.
 func (k *kernelSyscall) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
 	return os.OpenFile(name, flag, perm)
+}
+
+func (k *kernelSyscall) UnixOpen(path string, mode int, perm uint32) (fd int, err error) {
+	return unix.Open(path, mode, perm)
 }
 
 func (k *kernelSyscall) WriteFile(name string, data []byte, perm os.FileMode) error {
