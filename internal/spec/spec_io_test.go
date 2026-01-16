@@ -2,6 +2,7 @@ package spec
 
 import (
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -94,48 +95,48 @@ func TestBuildProcessSpec_Success(t *testing.T) {
 				"CAP_DAC_OVERRIDE",
 				"CAP_FSETID",
 				"CAP_FOWNER",
-				"CAP_MKNOD",
+				//"CAP_MKNOD",
 				"CAP_NET_RAW",
 				"CAP_SETGID",
 				"CAP_SETUID",
-				"CAP_SETFCAP",
-				"CAP_SETPCAP",
+				//"CAP_SETFCAP",
+				//"CAP_SETPCAP",
 				"CAP_NET_BIND_SERVICE",
 				"CAP_SYS_CHROOT",
 				"CAP_KILL",
-				"CAP_AUDIT_WRITE",
+				//"CAP_AUDIT_WRITE",
 			},
 			Effective: []string{
 				"CAP_CHOWN",
 				"CAP_DAC_OVERRIDE",
 				"CAP_FSETID",
 				"CAP_FOWNER",
-				"CAP_MKNOD",
+				//"CAP_MKNOD",
 				"CAP_NET_RAW",
 				"CAP_SETGID",
 				"CAP_SETUID",
-				"CAP_SETFCAP",
-				"CAP_SETPCAP",
+				//"CAP_SETFCAP",
+				//"CAP_SETPCAP",
 				"CAP_NET_BIND_SERVICE",
 				"CAP_SYS_CHROOT",
 				"CAP_KILL",
-				"CAP_AUDIT_WRITE",
+				//"CAP_AUDIT_WRITE",
 			},
 			Permitted: []string{
 				"CAP_CHOWN",
 				"CAP_DAC_OVERRIDE",
 				"CAP_FSETID",
 				"CAP_FOWNER",
-				"CAP_MKNOD",
+				//"CAP_MKNOD",
 				"CAP_NET_RAW",
 				"CAP_SETGID",
 				"CAP_SETUID",
-				"CAP_SETFCAP",
-				"CAP_SETPCAP",
+				//"CAP_SETFCAP",
+				//"CAP_SETPCAP",
 				"CAP_NET_BIND_SERVICE",
 				"CAP_SYS_CHROOT",
 				"CAP_KILL",
-				"CAP_AUDIT_WRITE",
+				//"CAP_AUDIT_WRITE",
 			},
 		},
 	}
@@ -150,6 +151,21 @@ func TestBuildLinuxSpec_Success(t *testing.T) {
 	got := buildLinuxSpec(opts)
 
 	// == assert ==
+	ep := uint32(1)
+	ociArch := func() string {
+		arch := runtime.GOARCH
+		switch arch {
+		case "amd64":
+			return "SCMP_ARCH_X86_64"
+		case "arm64":
+			return "SCMP_ARCH_AARCH64"
+		case "riscv64":
+			return "SCMP_ARCH_RISCV64"
+		default:
+			return ""
+		}
+	}
+
 	expect := LinuxSpecObject{
 		Resources: ResourceObject{
 			Memory: MemoryObject{
@@ -160,6 +176,42 @@ func TestBuildLinuxSpec_Success(t *testing.T) {
 				Quota:  80000,
 			},
 		},
+		Seccomp: &SeccompObject{
+			DefaultAction:   "SCMP_ACT_ALLOW",
+			DefaultErrnoRet: &ep,
+			Architectures: []string{
+				ociArch(),
+			},
+			Syscalls: []SeccompSyscallObject{
+				{
+					Names: []string{
+						"bpf",
+						"perf_event_open",
+						"kexec_load",
+						"open_by_handle_at",
+						"ptrace",
+						"process_vm_readv",
+						"process_vm_writev",
+						"userfaultfd",
+						"reboot",
+						"swapon",
+						"swapoff",
+						"open_by_handle_at",
+						"name_to_handle_at",
+						"init_module",
+						"finit_module",
+						"delete_module",
+						"kcmp",
+						"mount",
+						"unshare",
+						"setns",
+					},
+					Action:   "SCMP_ACT_ERRNO",
+					ErrnoRet: &ep,
+				},
+			},
+		},
+		AppArmorProfile: "raind-default",
 		Namespaces: []NamespaceObject{
 			{
 				Type: "mount",
@@ -235,6 +287,21 @@ func TestBuildSpec_Success(t *testing.T) {
 	got := buildSpec(opts)
 
 	// == assert ==
+	ep := uint32(1)
+	ociArch := func() string {
+		arch := runtime.GOARCH
+		switch arch {
+		case "amd64":
+			return "SCMP_ARCH_X86_64"
+		case "arm64":
+			return "SCMP_ARCH_AARCH64"
+		case "riscv64":
+			return "SCMP_ARCH_RISCV64"
+		default:
+			return ""
+		}
+	}
+
 	expect := Spec{
 		OciVersion: "1.3.0",
 		Root: RootObject{
@@ -260,48 +327,48 @@ func TestBuildSpec_Success(t *testing.T) {
 					"CAP_DAC_OVERRIDE",
 					"CAP_FSETID",
 					"CAP_FOWNER",
-					"CAP_MKNOD",
+					//"CAP_MKNOD",
 					"CAP_NET_RAW",
 					"CAP_SETGID",
 					"CAP_SETUID",
-					"CAP_SETFCAP",
-					"CAP_SETPCAP",
+					//"CAP_SETFCAP",
+					//"CAP_SETPCAP",
 					"CAP_NET_BIND_SERVICE",
 					"CAP_SYS_CHROOT",
 					"CAP_KILL",
-					"CAP_AUDIT_WRITE",
+					//"CAP_AUDIT_WRITE",
 				},
 				Effective: []string{
 					"CAP_CHOWN",
 					"CAP_DAC_OVERRIDE",
 					"CAP_FSETID",
 					"CAP_FOWNER",
-					"CAP_MKNOD",
+					//"CAP_MKNOD",
 					"CAP_NET_RAW",
 					"CAP_SETGID",
 					"CAP_SETUID",
-					"CAP_SETFCAP",
-					"CAP_SETPCAP",
+					//"CAP_SETFCAP",
+					//"CAP_SETPCAP",
 					"CAP_NET_BIND_SERVICE",
 					"CAP_SYS_CHROOT",
 					"CAP_KILL",
-					"CAP_AUDIT_WRITE",
+					//"CAP_AUDIT_WRITE",
 				},
 				Permitted: []string{
 					"CAP_CHOWN",
 					"CAP_DAC_OVERRIDE",
 					"CAP_FSETID",
 					"CAP_FOWNER",
-					"CAP_MKNOD",
+					//"CAP_MKNOD",
 					"CAP_NET_RAW",
 					"CAP_SETGID",
 					"CAP_SETUID",
-					"CAP_SETFCAP",
-					"CAP_SETPCAP",
+					//"CAP_SETFCAP",
+					//"CAP_SETPCAP",
 					"CAP_NET_BIND_SERVICE",
 					"CAP_SYS_CHROOT",
 					"CAP_KILL",
-					"CAP_AUDIT_WRITE",
+					//"CAP_AUDIT_WRITE",
 				},
 			},
 		},
@@ -316,6 +383,42 @@ func TestBuildSpec_Success(t *testing.T) {
 					Quota:  80000,
 				},
 			},
+			Seccomp: &SeccompObject{
+				DefaultAction:   "SCMP_ACT_ALLOW",
+				DefaultErrnoRet: &ep,
+				Architectures: []string{
+					ociArch(),
+				},
+				Syscalls: []SeccompSyscallObject{
+					{
+						Names: []string{
+							"bpf",
+							"perf_event_open",
+							"kexec_load",
+							"open_by_handle_at",
+							"ptrace",
+							"process_vm_readv",
+							"process_vm_writev",
+							"userfaultfd",
+							"reboot",
+							"swapon",
+							"swapoff",
+							"open_by_handle_at",
+							"name_to_handle_at",
+							"init_module",
+							"finit_module",
+							"delete_module",
+							"kcmp",
+							"mount",
+							"unshare",
+							"setns",
+						},
+						Action:   "SCMP_ACT_ERRNO",
+						ErrnoRet: &ep,
+					},
+				},
+			},
+			AppArmorProfile: "raind-default",
 			Namespaces: []NamespaceObject{
 				{
 					Type: "mount",
@@ -370,6 +473,21 @@ func TestLoadConfigFile_Success(t *testing.T) {
 	// == assert ==
 	assert.Nil(t, err)
 
+	ep := uint32(1)
+	ociArch := func() string {
+		arch := runtime.GOARCH
+		switch arch {
+		case "amd64":
+			return "SCMP_ARCH_X86_64"
+		case "arm64":
+			return "SCMP_ARCH_AARCH64"
+		case "riscv64":
+			return "SCMP_ARCH_RISCV64"
+		default:
+			return ""
+		}
+	}
+
 	expect := Spec{
 		OciVersion: "1.3.0",
 		Root: RootObject{
@@ -395,48 +513,48 @@ func TestLoadConfigFile_Success(t *testing.T) {
 					"CAP_DAC_OVERRIDE",
 					"CAP_FSETID",
 					"CAP_FOWNER",
-					"CAP_MKNOD",
+					//"CAP_MKNOD",
 					"CAP_NET_RAW",
 					"CAP_SETGID",
 					"CAP_SETUID",
-					"CAP_SETFCAP",
-					"CAP_SETPCAP",
+					//"CAP_SETFCAP",
+					//"CAP_SETPCAP",
 					"CAP_NET_BIND_SERVICE",
 					"CAP_SYS_CHROOT",
 					"CAP_KILL",
-					"CAP_AUDIT_WRITE",
+					//"CAP_AUDIT_WRITE",
 				},
 				Effective: []string{
 					"CAP_CHOWN",
 					"CAP_DAC_OVERRIDE",
 					"CAP_FSETID",
 					"CAP_FOWNER",
-					"CAP_MKNOD",
+					//"CAP_MKNOD",
 					"CAP_NET_RAW",
 					"CAP_SETGID",
 					"CAP_SETUID",
-					"CAP_SETFCAP",
-					"CAP_SETPCAP",
+					//"CAP_SETFCAP",
+					//"CAP_SETPCAP",
 					"CAP_NET_BIND_SERVICE",
 					"CAP_SYS_CHROOT",
 					"CAP_KILL",
-					"CAP_AUDIT_WRITE",
+					//"CAP_AUDIT_WRITE",
 				},
 				Permitted: []string{
 					"CAP_CHOWN",
 					"CAP_DAC_OVERRIDE",
 					"CAP_FSETID",
 					"CAP_FOWNER",
-					"CAP_MKNOD",
+					//"CAP_MKNOD",
 					"CAP_NET_RAW",
 					"CAP_SETGID",
 					"CAP_SETUID",
-					"CAP_SETFCAP",
-					"CAP_SETPCAP",
+					//"CAP_SETFCAP",
+					//"CAP_SETPCAP",
 					"CAP_NET_BIND_SERVICE",
 					"CAP_SYS_CHROOT",
 					"CAP_KILL",
-					"CAP_AUDIT_WRITE",
+					//"CAP_AUDIT_WRITE",
 				},
 			},
 		},
@@ -451,6 +569,42 @@ func TestLoadConfigFile_Success(t *testing.T) {
 					Quota:  80000,
 				},
 			},
+			Seccomp: &SeccompObject{
+				DefaultAction:   "SCMP_ACT_ALLOW",
+				DefaultErrnoRet: &ep,
+				Architectures: []string{
+					ociArch(),
+				},
+				Syscalls: []SeccompSyscallObject{
+					{
+						Names: []string{
+							"bpf",
+							"perf_event_open",
+							"kexec_load",
+							"open_by_handle_at",
+							"ptrace",
+							"process_vm_readv",
+							"process_vm_writev",
+							"userfaultfd",
+							"reboot",
+							"swapon",
+							"swapoff",
+							"open_by_handle_at",
+							"name_to_handle_at",
+							"init_module",
+							"finit_module",
+							"delete_module",
+							"kcmp",
+							"mount",
+							"unshare",
+							"setns",
+						},
+						Action:   "SCMP_ACT_ERRNO",
+						ErrnoRet: &ep,
+					},
+				},
+			},
+			AppArmorProfile: "raind-default",
 			Namespaces: []NamespaceObject{
 				{
 					Type: "mount",

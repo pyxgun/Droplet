@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 
@@ -33,7 +34,9 @@ func NewContainerInit() *ContainerInit {
 // execution environments.
 func newRootContainerEnvPrepare() *rootContainerEnvPreparer {
 	return &rootContainerEnvPreparer{
-		syscallHandler: utils.NewSyscallHandler(),
+		syscallHandler:  utils.NewSyscallHandler(),
+		seccompHandler:  NewSeccompManager(),
+		appArmorHandler: NewAppArmorManager(),
 	}
 }
 
@@ -81,7 +84,7 @@ func (c *ContainerInit) Execute(opt InitOption) error {
 	}
 
 	// 4. replace process image with the container entrypoint
-	if err := c.syscallHandler.Exec(entrypoint[0], entrypoint, os.Environ()); err != nil {
+	if err := c.syscallHandler.Exec(entrypoint[0], entrypoint, slices.Concat(os.Environ(), spec.Process.Env)); err != nil {
 		return err
 	}
 
@@ -108,7 +111,9 @@ type containerEnvPreparer interface {
 // capability adjustments, etc.) may be added to this implementation as
 // container initialization evolves.
 type rootContainerEnvPreparer struct {
-	syscallHandler utils.KernelSyscallHandler
+	syscallHandler  utils.KernelSyscallHandler
+	seccompHandler  SeccompHandler
+	appArmorHandler AppArmorHandler
 }
 
 // prepare sets up the runtime environment for the root container process
@@ -135,31 +140,40 @@ func (p *rootContainerEnvPreparer) prepare(containerId string, spec spec.Spec) e
 	if err := p.setHostnameToContainerId(spec.Hostname); err != nil {
 		return err
 	}
+	// 3. set env
 	if err := p.setEnv(spec.Process.Env); err != nil {
 		return err
 	}
-	// 3. setup overlay
+	// 4. setup overlay
 	if err := p.setupOverlay(spec.Root.Path, spec.Annotations.Image); err != nil {
 		return err
 	}
-	// 4. mount filesystem
+	// 5. mount filesystem
 	if err := p.mountFilesystem(containerId, spec.Root.Path, spec.Mounts); err != nil {
 		return err
 	}
-	// 5. mount standard device
+	// 6. mount standard device
 	if err := p.mountStdDevice(spec.Root.Path); err != nil {
 		return err
 	}
-	// 6. create symbolic link
+	// 7. create symbolic link
 	if err := p.createSymbolicLink(spec.Root.Path); err != nil {
 		return err
 	}
-	// 7. pivot_root
+	// 8. pivot_root
 	if err := p.pivotRoot(spec.Root.Path); err != nil {
 		return err
 	}
-	// 8. set capability
+	// 9. set capability
 	if err := p.setCapability(spec.Process.Capabilities); err != nil {
+		return err
+	}
+	// 10. apply AppArmor
+	if err := p.appArmorHandler.ApplyAAProfile(spec.LinuxSpec.AppArmorProfile); err != nil {
+		return err
+	}
+	// 11. install seccomp (NO_NEW_PRIVS + filter)
+	if err := p.seccompHandler.InstallDenyFilter(*spec.LinuxSpec.Seccomp); err != nil {
 		return err
 	}
 
@@ -389,10 +403,28 @@ func (p *rootContainerEnvPreparer) mountFilesystem(containerId string, rootfs st
 			},
 		},
 		{
+			Destination: "/sys/fs/bpf",
+			Type:        "tmpfs",
+			Source:      "tmpfs",
+			Options: []string{
+				"nosuid",
+				"noexec",
+				"nodev",
+				"ro",
+				"mode=0555",
+				"size=0",
+			},
+		},
+		{
 			Destination: "/sys/fs/cgroup",
 			Type:        "cgroup2",
 			Source:      "cgroup",
-			Options:     []string{},
+			Options: []string{
+				"nosuid",
+				"nodev",
+				"noexec",
+				"ro",
+			},
 		},
 		{
 			Destination: "/dev/mqueue",
