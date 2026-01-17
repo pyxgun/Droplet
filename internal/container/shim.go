@@ -283,12 +283,10 @@ func (h *hub) startPump() {
 		for {
 			n, err := h.ptmx.Read(buf)
 			if n > 0 {
-				// 1) 常に console.log へ書く
 				if h.console != nil {
 					_, _ = h.console.Write(buf[:n])
 				}
 
-				// 2) attach 中なら conn にも書く
 				h.mu.Lock()
 				c := h.conn
 				h.mu.Unlock()
