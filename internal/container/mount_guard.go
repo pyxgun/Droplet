@@ -58,6 +58,20 @@ func hasDeniedSource(source string) bool {
 	return false
 }
 
+func hasDeniedDestination(destination string) bool {
+	p := filepath.Clean(destination)
+	if p == "/" {
+		return true
+	}
+	deniedList := []string{"/proc", "/sys", "/dev", "/run", "/var/run", "/boot"}
+	for _, d := range deniedList {
+		if p == d || strings.HasPrefix(p, d+string(os.PathSeparator)) {
+			return true
+		}
+	}
+	return false
+}
+
 func isSymlink(source string) (bool, error) {
 	fi, err := os.Lstat(source)
 	if err != nil {
