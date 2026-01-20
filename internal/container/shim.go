@@ -1,6 +1,7 @@
 package container
 
 import (
+	"droplet/internal/logs"
 	"droplet/internal/spec"
 	"droplet/internal/utils"
 	"encoding/binary"
@@ -30,20 +31,47 @@ type ContainerShim struct {
 	commandFactory utils.CommandFactory
 }
 
-func (c *ContainerShim) Execute(containerId string, fifo string, entrypoint []string) error {
+func (c *ContainerShim) Execute(containerId string, fifo string, entrypoint []string) (err error) {
+	var (
+		spec  spec.Spec
+		event = "shim"
+		stage string
+		pid   int
+	)
+
+	// audit log
+	defer func() {
+		result := "success"
+		if err != nil {
+			result = "fail"
+		}
+		_ = logs.RecordAuditLog(logs.AuditRecord{
+			ContainerId: containerId,
+			Event:       event,
+			Stage:       stage,
+			Pid:         pid,
+			Spec:        &spec,
+			Result:      result,
+			Error:       err,
+		})
+	}()
+
 	// 1. load config.json
-	spec, err := c.specSecureLoad(containerId)
+	stage = "load_spec"
+	spec, err = c.specSecureLoad(containerId)
 	if err != nil {
 		return err
 	}
 
 	// 2. pty
+	stage = "open_pty"
 	ptmx, tty, err := pty.Open()
 	if err != nil {
 		return err
 	}
 
 	// 3. console socket listen
+	stage = "listen_socket"
 	sockPath := utils.SockPath(containerId)
 	ln, err := net.Listen("unix", sockPath)
 	if err != nil {
@@ -51,6 +79,7 @@ func (c *ContainerShim) Execute(containerId string, fifo string, entrypoint []st
 	}
 
 	// open log
+	stage = "open_log"
 	shimLog, err := os.OpenFile(utils.ShimLogPath(containerId), os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
 		return err
@@ -64,6 +93,7 @@ func (c *ContainerShim) Execute(containerId string, fifo string, entrypoint []st
 	defer consoleLog.Close()
 
 	// 4. prepare init subcommand
+	stage = "prepare_init_command"
 	initArgs := append([]string{"init", containerId, fifo}, entrypoint...)
 	cmd := c.commandFactory.Command(os.Args[0], initArgs...)
 	// set stdio to tty
@@ -80,30 +110,37 @@ func (c *ContainerShim) Execute(containerId string, fifo string, entrypoint []st
 	cmd.SetSysProcAttr(sysProcAttr)
 
 	// 5. execute init subcommand
-	if err := cmd.Start(); err != nil {
+	stage = "exec_init"
+	err = cmd.Start()
+	if err != nil {
 		logger.Printf("init start failed: %v", err)
 		return err
 	}
 	initPid := cmd.Pid()
+	pid = initPid
 	logger.Printf("init started pid=%d", initPid)
 
 	// 6. create pidfile
-	if err := c.writeInitPid(containerId, initPid); err != nil {
+	stage = "create_pid_file"
+	err = c.writeInitPid(containerId, initPid)
+	if err != nil {
 		logger.Printf("writeInitPid failed: %v", err)
 		return err
 	}
 
 	// 6. close tty
+	stage = "close_tty"
 	_ = tty.Close()
 
 	// 7. accept and proxy
-	//go c.acceptAndProxyLoop(ln, ptmx)
+	stage = "data_accept"
 	h := newHub(ptmx, consoleLog, logger)
 	h.startPump()
 	go c.acceptLoop(ln, h, logger)
 
 	// 8. wait init process
 	//err = cmd.Wait()
+	stage = "wait_init"
 	waitErr := cmd.Wait()
 	logger.Printf("init exited: %v", waitErr)
 

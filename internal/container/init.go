@@ -1,6 +1,7 @@
 package container
 
 import (
+	"droplet/internal/logs"
 	"droplet/internal/spec"
 	"droplet/internal/utils"
 	"fmt"
@@ -64,37 +65,68 @@ type ContainerInit struct {
 // On success, this function does not return because the process image
 // is replaced. Errors are returned only if the FIFO read fails or
 // syscall.Exec cannot be invoked.
-func (c *ContainerInit) Execute(opt InitOption) error {
+func (c *ContainerInit) Execute(opt InitOption) (err error) {
 	// lock GO thread
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
+
+	var (
+		spec  spec.Spec
+		event = "init"
+		stage string
+	)
+
+	// audit log
+	defer func() {
+		result := "success"
+		if err != nil {
+			result = "fail"
+		}
+		_ = logs.RecordAuditLog(logs.AuditRecord{
+			ContainerId: opt.ContainerId,
+			Event:       event,
+			Stage:       stage,
+			Spec:        &spec,
+			Result:      result,
+			Error:       err,
+		})
+	}()
 
 	fifo := opt.Fifo
 	entrypoint := opt.Entrypoint
 
 	// 1. load config.json
-	spec, err := c.specSecureLoad(opt.ContainerId)
+	stage = "load_spec"
+	spec, err = c.specSecureLoad(opt.ContainerId)
 	if err != nil {
 		return err
 	}
 
 	// 2. read fifo for waiting start signal
-	if err := c.fifoReader.readFifo(fifo); err != nil {
+	stage = "read_fifo"
+	err = c.fifoReader.readFifo(fifo)
+	if err != nil {
 		return err
 	}
 
 	// 3. prepare container environment
-	if err := c.containerEnvPreparer.prepare(opt.ContainerId, spec); err != nil {
+	stage = "prepare"
+	err = c.containerEnvPreparer.prepare(opt.ContainerId, spec)
+	if err != nil {
 		return err
 	}
 
 	// 4. apply AppArmor Profile Onexec
-	if err := c.appArmorHandler.ApplyAAProfileOnExec(spec.LinuxSpec.AppArmorProfile); err != nil {
+	stage = "apply_apparmor"
+	err = c.appArmorHandler.ApplyAAProfileOnExec(spec.LinuxSpec.AppArmorProfile)
+	if err != nil {
 		return err
 	}
 
 	// 5. replace process with the container entrypoint
-	if err := c.syscallHandler.Exec(entrypoint[0], entrypoint, spec.Process.Env); err != nil {
+	stage = "exec_entrypoint"
+	err = c.syscallHandler.Exec(entrypoint[0], entrypoint, spec.Process.Env)
+	if err != nil {
 		return err
 	}
 

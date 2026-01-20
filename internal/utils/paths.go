@@ -5,7 +5,10 @@ import (
 	"path/filepath"
 )
 
-const cgroupRootDir = "/sys/fs/cgroup/raind"
+const (
+	AuditLog      = "/etc/raind/log/audit.log"
+	cgroupRootDir = "/sys/fs/cgroup/raind"
+)
 
 func DefaultRootDir() string {
 	if v := os.Getenv("RAIND_ROOT_DIR"); v != "" {
